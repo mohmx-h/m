@@ -1,1 +1,4687 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"
+      x-data="adminApp()"
+      :class="{ 'dark': dark }"
+      x-init="init()"
+      class="scroll-smooth">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>لوحة التحكم | محمد الحميقاني</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=PT+Sans:wght@400;700&display=swap"
+        rel="stylesheet">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+
+      theme: {
+        extend: {
+          colors: {
+            accent: '#FF6B2B',
+            'accent-light': '#FF8F5C'
+          },
+
+          fontFamily: {
+            display: ['"PT Sans"', 'sans-serif'],
+            body: ['"DM Sans"', 'sans-serif'],
+            arabic: ['"Baloo Bhaijaan 2"', 'sans-serif']
+          },
+
+          boxShadow: {
+            soft: '0 10px 40px rgba(0,0,0,.06)',
+            orange: '0 10px 30px rgba(255,107,43,.18)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", "Baloo Bhaijaan 2", sans-serif;
+      background: #f7f7f8;
+      color: #18181b;
+    }
+
+    html.dark body {
+      background: #09090b;
+      color: #f4f4f5;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    button,
+    input,
+    textarea,
+    select {
+      font-family: "Baloo Bhaijaan 2", sans-serif;
+    }
+
+    .font-display {
+      font-family: "PT Sans", sans-serif;
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
+
+    ::selection {
+      background: rgba(255, 107, 43, .18);
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #d4d4d8;
+      border-radius: 999px;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: #3f3f46;
+    }
+
+    .sidebar {
+      transition:
+        width .25s ease,
+        transform .25s ease;
+    }
+
+    .main-area {
+      transition: margin-right .25s ease;
+    }
+
+    .nav-item {
+      transition:
+        background .2s ease,
+        color .2s ease,
+        transform .2s ease;
+    }
+
+    .nav-item:hover {
+      transform: translateX(-2px);
+    }
+
+    .nav-item.active {
+      background: rgba(255, 107, 43, .11);
+      color: #FF6B2B;
+    }
+
+    .glass {
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .dark .glass {
+      background: rgba(24,24,27,.78);
+    }
+
+    .card {
+      border: 1px solid #e4e4e7;
+      background: #fff;
+      border-radius: 22px;
+    }
+
+    .dark .card {
+      border-color: #27272a;
+      background: #18181b;
+    }
+
+    .input {
+      width: 100%;
+      border: 1px solid #e4e4e7;
+      background: #fafafa;
+      border-radius: 14px;
+      padding: 11px 14px;
+      outline: none;
+      transition: .2s;
+      color: #18181b;
+    }
+
+    .input:focus {
+      border-color: #FF6B2B;
+      box-shadow: 0 0 0 3px rgba(255,107,43,.10);
+      background: #fff;
+    }
+
+    .dark .input {
+      border-color: #3f3f46;
+      background: #09090b;
+      color: #f4f4f5;
+    }
+
+    .dark .input:focus {
+      background: #09090b;
+    }
+
+    .btn-primary {
+      background: #FF6B2B;
+      color: white;
+      border-radius: 13px;
+      padding: 10px 17px;
+      transition: .2s;
+      box-shadow: 0 8px 22px rgba(255,107,43,.18);
+    }
+
+    .btn-primary:hover {
+      background: #f45d1c;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #f4f4f5;
+      color: #27272a;
+      border-radius: 13px;
+      padding: 10px 17px;
+      transition: .2s;
+    }
+
+    .dark .btn-secondary {
+      background: #27272a;
+      color: #f4f4f5;
+    }
+
+    .btn-secondary:hover {
+      background: #e4e4e7;
+    }
+
+    .dark .btn-secondary:hover {
+      background: #3f3f46;
+    }
+
+    .fade-enter {
+      animation: fadeIn .22s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stat-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,107,43,.11);
+      color: #FF6B2B;
+    }
+
+    .table-row {
+      transition: background .2s ease;
+    }
+
+    .table-row:hover {
+      background: #fafafa;
+    }
+
+    .dark .table-row:hover {
+      background: #27272a;
+    }
+
+    .switch {
+      width: 45px;
+      height: 25px;
+      border-radius: 999px;
+      background: #d4d4d8;
+      padding: 3px;
+      transition: .2s;
+      cursor: pointer;
+    }
+
+    .switch-dot {
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      background: white;
+      transition: .2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    }
+
+    .switch.on {
+      background: #FF6B2B;
+    }
+
+    .switch.on .switch-dot {
+      transform: translateX(-20px);
+    }
+
+    .mobile-overlay {
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(4px);
+    }
+
+    .scrollbar-hidden::-webkit-scrollbar {
+      display: none;
+    }
+
+    .scrollbar-hidden {
+      scrollbar-width: none;
+    }
+
+    .login-bg {
+      background:
+        radial-gradient(circle at 85% 15%, rgba(255,107,43,.16), transparent 30%),
+        radial-gradient(circle at 10% 90%, rgba(255,107,43,.10), transparent 30%),
+        #f7f7f8;
+    }
+
+    .dark .login-bg {
+      background:
+        radial-gradient(circle at 85% 15%, rgba(255,107,43,.10), transparent 30%),
+        radial-gradient(circle at 10% 90%, rgba(255,107,43,.07), transparent 30%),
+        #09090b;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ===================================================== -->
+<!-- LOGIN -->
+<!-- ===================================================== -->
+
+<div
+  x-show="!authenticated"
+  x-cloak
+  class="login-bg fixed inset-0 z-[500] flex min-h-screen items-center justify-center p-4">
+
+  <div class="w-full max-w-md">
+
+    <div class="mb-8 text-center">
+
+      <div class="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[22px] bg-accent text-2xl text-white shadow-orange">
+        <i class="fa-solid fa-user-tie"></i>
+      </div>
+
+      <h1 class="font-arabic text-3xl font-extrabold">
+        لوحة التحكم
+      </h1>
+
+      <p class="mt-2 text-sm text-zinc-500">
+        تسجيل دخول المدير — محمد الحميقاني
+      </p>
+
+    </div>
+
+    <div class="card p-6 shadow-soft sm:p-8">
+
+      <div class="mb-6">
+
+        <h2 class="font-arabic text-xl font-bold">
+          تسجيل الدخول
+        </h2>
+
+        <p class="mt-1 text-xs text-zinc-400">
+          أدخل بيانات حساب المدير للوصول إلى لوحة التحكم.
+        </p>
+
+      </div>
+
+      <form @submit.prevent="login()" class="space-y-5">
+
+        <div>
+
+          <label class="mb-2 block text-sm font-bold">
+            البريد الإلكتروني
+          </label>
+
+          <input
+            type="email"
+            class="input"
+            x-model="loginForm.email"
+            autocomplete="email"
+            placeholder="admin@example.com"
+            required>
+
+        </div>
+
+        <div>
+
+          <label class="mb-2 block text-sm font-bold">
+            كلمة المرور
+          </label>
+
+          <div class="relative">
+
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              class="input pl-12"
+              x-model="loginForm.password"
+              autocomplete="current-password"
+              placeholder="••••••••"
+              required>
+
+            <button
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+
+              <i
+                class="fa-solid"
+                :class="showPassword ? 'fa-eye-slash' : 'fa-eye'">
+              </i>
+
+            </button>
+
+          </div>
+
+        </div>
+
+        <div
+          x-show="loginError"
+          x-cloak
+          class="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600 dark:bg-red-950/30 dark:text-red-400">
+
+          <i class="fa-solid fa-circle-exclamation ml-1"></i>
+          <span x-text="loginError"></span>
+
+        </div>
+
+        <button
+          type="submit"
+          class="btn-primary flex w-full items-center justify-center gap-2"
+          :disabled="loginLoading">
+
+          <i
+            class="fa-solid"
+            :class="loginLoading ? 'fa-spinner fa-spin' : 'fa-right-to-bracket'">
+          </i>
+
+          <span x-text="loginLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'"></span>
+
+        </button>
+
+      </form>
+
+      <div class="mt-6 flex items-center justify-center gap-2 text-[11px] text-zinc-400">
+
+        <i class="fa-solid fa-shield-halved text-emerald-500"></i>
+
+        <span>
+          الاتصال محمي بواسطة Firebase Authentication
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- ADMIN -->
+<!-- ===================================================== -->
+
+<div
+  x-show="authenticated"
+  x-cloak
+  class="min-h-screen">
+
+  <!-- Mobile Overlay -->
+  <div
+    x-show="mobileSidebar"
+    x-cloak
+    @click="mobileSidebar = false"
+    class="fixed inset-0 z-40 mobile-overlay lg:hidden">
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside
+    class="sidebar fixed top-0 right-0 z-50 h-screen w-[280px] border-l border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 lg:translate-x-0"
+    :class="mobileSidebar ? 'translate-x-0' : 'translate-x-full'">
+
+    <div class="flex h-full flex-col">
+
+      <div class="flex h-[82px] items-center justify-between border-b border-zinc-100 px-5 dark:border-zinc-800">
+
+        <a href="../index.html"
+           target="_blank"
+           class="flex items-center gap-3">
+
+          <div class="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-white shadow-orange">
+            <i class="fa-solid fa-user-tie"></i>
+          </div>
+
+          <div>
+            <div class="font-arabic text-lg font-extrabold leading-5">
+              محمد الحميقاني
+            </div>
+
+            <div class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              لوحة التحكم
+            </div>
+          </div>
+
+        </a>
+
+        <button
+          @click="mobileSidebar = false"
+          class="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 lg:hidden">
+
+          <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+      </div>
+
+      <!-- Profile -->
+      <div class="border-b border-zinc-100 p-4 dark:border-zinc-800">
+
+        <div class="flex items-center gap-3 rounded-2xl bg-zinc-50 p-3 dark:bg-zinc-900">
+
+          <img
+            src="../img/m.png"
+            onerror="this.src='https://placehold.co/100x100/png?text=M'"
+            class="h-11 w-11 rounded-xl object-cover"
+            alt="محمد الحميقاني">
+
+          <div class="min-w-0 flex-1">
+
+            <div class="truncate font-arabic font-bold">
+              محمد الحميقاني
+            </div>
+
+            <div class="flex items-center gap-1 text-[11px]"
+                 :class="firebaseConnected ? 'text-emerald-600' : 'text-red-500'">
+
+              <span
+                class="h-1.5 w-1.5 rounded-full"
+                :class="firebaseConnected ? 'bg-emerald-500' : 'bg-red-500'">
+              </span>
+
+              <span x-text="firebaseConnected ? 'Firebase متصل' : 'Firebase غير متصل'"></span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Navigation -->
+      <nav class="scrollbar-hidden flex-1 overflow-y-auto px-3 py-4">
+
+        <div class="mb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          الرئيسية
+        </div>
+
+        <button
+          @click="go('dashboard')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'dashboard' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+          <span>نظرة عامة</span>
+
+        </button>
+
+        <div class="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          إدارة الموقع
+        </div>
+
+        <button
+          @click="go('hero')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'hero' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-wand-magic-sparkles w-5 text-center"></i>
+          <span>الرئيسية و Hero</span>
+
+        </button>
+
+        <button
+          @click="go('profile')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'profile' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-user w-5 text-center"></i>
+          <span>الملف الشخصي</span>
+
+        </button>
+
+        <button
+          @click="go('social')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'social' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-share-nodes w-5 text-center"></i>
+          <span>الحسابات والإحصائيات</span>
+
+        </button>
+
+        <button
+          @click="go('services')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'services' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-layer-group w-5 text-center"></i>
+          <span>أقسام المحتوى</span>
+
+        </button>
+
+        <button
+          @click="go('videos')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'videos' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-film w-5 text-center"></i>
+          <span>أبرز الفيديوهات</span>
+
+          <span
+            class="mr-auto rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-bold text-accent dark:bg-orange-950/30"
+            x-text="videos.length">
+          </span>
+
+        </button>
+
+        <button
+          @click="go('reviews')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'reviews' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-comments w-5 text-center"></i>
+          <span>آراء المتابعين</span>
+
+        </button>
+
+        <button
+          @click="go('navigation')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'navigation' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-bars w-5 text-center"></i>
+          <span>القائمة والتنقل</span>
+
+        </button>
+
+        <div class="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          الموقع
+        </div>
+
+        <button
+          @click="go('media')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'media' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-images w-5 text-center"></i>
+          <span>الصور والملفات</span>
+
+        </button>
+
+        <button
+          @click="go('contact')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'contact' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-envelope w-5 text-center"></i>
+          <span>التواصل</span>
+
+        </button>
+
+        <button
+          @click="go('footer')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'footer' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-shoe-prints w-5 text-center"></i>
+          <span>الفوتر</span>
+
+        </button>
+
+        <div class="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          الإعدادات
+        </div>
+
+        <button
+          @click="go('seo')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'seo' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-magnifying-glass-chart w-5 text-center"></i>
+          <span>SEO</span>
+
+        </button>
+
+        <button
+          @click="go('design')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'design' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-palette w-5 text-center"></i>
+          <span>التصميم والمظهر</span>
+
+        </button>
+
+        <button
+          @click="go('settings')"
+          class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold"
+          :class="page === 'settings' ? 'active' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'">
+
+          <i class="fa-solid fa-gear w-5 text-center"></i>
+          <span>الإعدادات العامة</span>
+
+        </button>
+
+      </nav>
+
+      <div class="border-t border-zinc-100 p-3 dark:border-zinc-800">
+
+        <button
+          @click="logout()"
+          class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20">
+
+          <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
+          تسجيل الخروج
+
+        </button>
+
+        <a
+          href="../index.html"
+          target="_blank"
+          class="mt-1 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-zinc-600 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-900">
+
+          <i class="fa-solid fa-arrow-up-right-from-square w-5 text-center"></i>
+          مشاهدة الموقع
+
+        </a>
+
+      </div>
+
+    </div>
+  </aside>
+
+
+  <!-- MAIN -->
+  <main class="main-area min-h-screen lg:mr-[280px]">
+
+    <!-- TOPBAR -->
+    <header class="glass sticky top-0 z-30 border-b border-zinc-200 dark:border-zinc-800">
+
+      <div class="flex h-[82px] items-center justify-between px-4 sm:px-6 lg:px-8">
+
+        <div class="flex items-center gap-3">
+
+          <button
+            @click="mobileSidebar = true"
+            class="grid h-11 w-11 place-items-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 lg:hidden">
+
+            <i class="fa-solid fa-bars"></i>
+
+          </button>
+
+          <div>
+
+            <div class="text-[11px] text-zinc-400">
+              لوحة التحكم
+            </div>
+
+            <h1
+              class="font-arabic text-xl font-extrabold sm:text-2xl"
+              x-text="pageTitle()">
+              نظرة عامة
+            </h1>
+
+          </div>
+
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+
+          <a
+            href="../index.html"
+            target="_blank"
+            class="hidden h-11 items-center gap-2 rounded-xl bg-zinc-100 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 sm:flex">
+
+            <i class="fa-solid fa-eye"></i>
+            <span>معاينة</span>
+
+          </a>
+
+          <button
+            @click="toggleDark()"
+            class="grid h-11 w-11 place-items-center rounded-xl bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800">
+
+            <i class="fa-solid"
+               :class="dark ? 'fa-sun' : 'fa-moon'"></i>
+
+          </button>
+
+          <button
+            class="relative grid h-11 w-11 place-items-center rounded-xl bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800">
+
+            <i class="fa-regular fa-bell"></i>
+
+            <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent"></span>
+
+          </button>
+
+          <button
+            @click="logout()"
+            class="hidden h-11 items-center gap-2 rounded-xl bg-zinc-100 px-3 text-sm font-bold dark:bg-zinc-900 sm:flex">
+
+            <img
+              src="../img/m.png"
+              onerror="this.src='https://placehold.co/100x100/png?text=M'"
+              class="h-8 w-8 rounded-lg object-cover"
+              alt="">
+
+            <span>المدير</span>
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+    <div class="p-4 sm:p-6 lg:p-8">
+
+
+      <!-- ================================================= -->
+      <!-- DASHBOARD -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'dashboard'" x-cloak class="fade-enter">
+
+        <div class="mb-7 overflow-hidden rounded-[28px] bg-zinc-950 p-6 text-white shadow-xl sm:p-8">
+
+          <div class="relative z-10 max-w-3xl">
+
+            <div class="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/80">
+
+              <span
+                class="h-2 w-2 rounded-full"
+                :class="firebaseConnected ? 'bg-emerald-400' : 'bg-red-400'">
+              </span>
+
+              <span
+                x-text="firebaseConnected ? 'النظام متصل بـ Firebase' : 'جاري الاتصال بـ Firebase'">
+              </span>
+
+            </div>
+
+            <h2 class="font-arabic text-3xl font-extrabold sm:text-4xl">
+              أهلاً بك في لوحة التحكم 👋
+            </h2>
+
+            <p class="mt-3 max-w-2xl font-arabic leading-7 text-zinc-400">
+              من هنا تستطيع التحكم بمحتوى موقع محمد الحميقاني بالكامل،
+              وإدارة الفيديوهات والحسابات والصور والإعدادات من مكان واحد.
+            </p>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+
+              <button
+                @click="go('videos')"
+                class="btn-primary inline-flex items-center gap-2">
+
+                <i class="fa-solid fa-plus"></i>
+                إضافة فيديو
+
+              </button>
+
+              <a
+                href="../index.html"
+                target="_blank"
+                class="inline-flex items-center gap-2 rounded-[13px] bg-white/10 px-4 py-2.5 text-sm font-bold text-white hover:bg-white/15">
+
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                مشاهدة الموقع
+
+              </a>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Stats -->
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+          <div class="card p-5">
+
+            <div class="flex items-start justify-between">
+
+              <div>
+
+                <div class="text-sm text-zinc-500">
+                  إجمالي الفيديوهات
+                </div>
+
+                <div
+                  class="mt-2 font-display text-3xl font-bold"
+                  x-text="videos.length">
+                  0
+                </div>
+
+                <div class="mt-2 text-xs text-emerald-600">
+                  <i class="fa-solid fa-film"></i>
+                  من Firestore
+                </div>
+
+              </div>
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-film"></i>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="card p-5">
+
+            <div class="flex items-start justify-between">
+
+              <div>
+
+                <div class="text-sm text-zinc-500">
+                  آراء المتابعين
+                </div>
+
+                <div
+                  class="mt-2 font-display text-3xl font-bold"
+                  x-text="reviews.length">
+                  0
+                </div>
+
+                <div class="mt-2 text-xs text-zinc-400">
+                  من Firestore
+                </div>
+
+              </div>
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-comments"></i>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="card p-5">
+
+            <div class="flex items-start justify-between">
+
+              <div>
+
+                <div class="text-sm text-zinc-500">
+                  TikTok
+                </div>
+
+                <div
+                  class="mt-2 font-display text-3xl font-bold"
+                  x-text="social.tiktok.followersDisplay">
+                  456K
+                </div>
+
+                <div class="mt-2 text-xs text-zinc-400">
+                  العدد المحفوظ حاليًا
+                </div>
+
+              </div>
+
+              <div class="stat-icon">
+                <i class="fa-brands fa-tiktok"></i>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="card p-5">
+
+            <div class="flex items-start justify-between">
+
+              <div>
+
+                <div class="text-sm text-zinc-500">
+                  Firebase
+                </div>
+
+                <div class="mt-2 font-arabic text-xl font-bold">
+
+                  <span
+                    x-text="firebaseConnected ? 'متصل' : 'غير متصل'">
+                  </span>
+
+                </div>
+
+                <div class="mt-2 text-xs"
+                     :class="firebaseConnected ? 'text-emerald-600' : 'text-red-500'">
+
+                  <span
+                    x-text="firebaseConnected ? 'قاعدة البيانات جاهزة' : 'تحقق من الاتصال'">
+                  </span>
+
+                </div>
+
+              </div>
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-database"></i>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="mt-6 grid gap-6 xl:grid-cols-3">
+
+          <div class="card p-6 xl:col-span-2">
+
+            <div class="mb-5">
+
+              <h3 class="font-arabic text-xl font-bold">
+                الوصول السريع
+              </h3>
+
+              <p class="mt-1 text-sm text-zinc-500">
+                أكثر الأدوات استخدامًا
+              </p>
+
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+              <button
+                @click="go('videos')"
+                class="rounded-2xl border border-zinc-200 p-4 text-right transition hover:border-accent hover:bg-orange-50/50 dark:border-zinc-800 dark:hover:bg-orange-950/10">
+
+                <div class="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-orange-100 text-accent dark:bg-orange-950/30">
+                  <i class="fa-solid fa-film"></i>
+                </div>
+
+                <div class="font-arabic font-bold">
+                  إدارة الفيديوهات
+                </div>
+
+                <div class="mt-1 text-xs text-zinc-500">
+                  إضافة وتعديل وحذف
+                </div>
+
+              </button>
+
+
+              <button
+                @click="go('social')"
+                class="rounded-2xl border border-zinc-200 p-4 text-right transition hover:border-accent hover:bg-orange-50/50 dark:border-zinc-800 dark:hover:bg-orange-950/10">
+
+                <div class="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-orange-100 text-accent dark:bg-orange-950/30">
+                  <i class="fa-solid fa-chart-line"></i>
+                </div>
+
+                <div class="font-arabic font-bold">
+                  الإحصائيات
+                </div>
+
+                <div class="mt-1 text-xs text-zinc-500">
+                  الحسابات والمتابعون
+                </div>
+
+              </button>
+
+
+              <button
+                @click="go('media')"
+                class="rounded-2xl border border-zinc-200 p-4 text-right transition hover:border-accent hover:bg-orange-50/50 dark:border-zinc-800 dark:hover:bg-orange-950/10">
+
+                <div class="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-orange-100 text-accent dark:bg-orange-950/30">
+                  <i class="fa-solid fa-images"></i>
+                </div>
+
+                <div class="font-arabic font-bold">
+                  الوسائط
+                </div>
+
+                <div class="mt-1 text-xs text-zinc-500">
+                  الصور والملفات
+                </div>
+
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div class="card p-6">
+
+            <h3 class="font-arabic text-xl font-bold">
+              حالة الموقع
+            </h3>
+
+            <div class="mt-5 space-y-4">
+
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-zinc-500">
+                  الموقع
+                </span>
+
+                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600 dark:bg-emerald-950/30">
+                  منشور
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-zinc-500">
+                  Firebase
+                </span>
+
+                <span
+                  class="rounded-full px-3 py-1 text-xs font-bold"
+                  :class="firebaseConnected
+                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30'
+                    : 'bg-red-50 text-red-600 dark:bg-red-950/30'"
+                  x-text="firebaseConnected ? 'متصل' : 'غير متصل'">
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between">
+
+                <span class="text-sm text-zinc-500">
+                  المدير
+                </span>
+
+                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600 dark:bg-emerald-950/30">
+                  مصادق عليه
+                </span>
+
+              </div>
+
+              <div class="border-t border-zinc-100 pt-4 dark:border-zinc-800">
+
+                <div class="mb-2 flex justify-between text-xs">
+
+                  <span class="text-zinc-500">
+                    جاهزية النظام
+                  </span>
+
+                  <span class="font-bold">
+                    100%
+                  </span>
+
+                </div>
+
+                <div class="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+
+                  <div class="h-full w-full rounded-full bg-accent"></div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- HERO -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'hero'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            الرئيسية و Hero
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            تحكم بالنصوص والعناصر الظاهرة في مقدمة الموقع.
+          </p>
+
+        </div>
+
+        <div class="card p-6">
+
+          <div class="grid gap-5 md:grid-cols-2">
+
+            <div class="md:col-span-2">
+
+              <label class="mb-2 block text-sm font-bold">
+                العبارة الصغيرة
+              </label>
+
+              <input
+                class="input"
+                x-model="site.hero.eyebrow">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                العنوان الرئيسي
+              </label>
+
+              <input
+                class="input"
+                x-model="site.hero.title">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                النص المتحرك
+              </label>
+
+              <input
+                class="input"
+                x-model="site.hero.typing">
+
+            </div>
+
+            <div class="md:col-span-2">
+
+              <label class="mb-2 block text-sm font-bold">
+                النص التعريفي
+              </label>
+
+              <textarea
+                class="input min-h-[130px]"
+                x-model="site.hero.description"></textarea>
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                الزر الأول
+              </label>
+
+              <input
+                class="input"
+                x-model="site.hero.button1Text">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                رابط الزر الأول
+              </label>
+
+              <input
+                class="input"
+                x-model="site.hero.button1Url">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                الزر الثاني
+              </label>
+
+              <input
+                class="input"
+                x-model="site.hero.button2Text">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                رابط الزر الثاني
+              </label>
+
+              <input
+                class="input"
+                x-model="site.hero.button2Url">
+
+            </div>
+
+          </div>
+
+          <div class="mt-6 flex justify-end border-t border-zinc-100 pt-5 dark:border-zinc-800">
+
+            <button
+              @click="saveHero()"
+              class="btn-primary">
+
+              <i class="fa-solid fa-floppy-disk ml-1"></i>
+              حفظ التغييرات
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- PROFILE -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'profile'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            الملف الشخصي
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            معلومات صاحب الموقع والصورة التعريفية.
+          </p>
+
+        </div>
+
+        <div class="card p-6">
+
+          <div class="grid gap-5 md:grid-cols-2">
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                الاسم
+              </label>
+
+              <input
+                class="input"
+                x-model="site.profile.name">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                المسمى
+              </label>
+
+              <input
+                class="input"
+                x-model="site.profile.role">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                اسم المستخدم
+              </label>
+
+              <input
+                class="input"
+                x-model="site.profile.username">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                الموقع
+              </label>
+
+              <input
+                class="input"
+                x-model="site.profile.location">
+
+            </div>
+
+            <div class="md:col-span-2">
+
+              <label class="mb-2 block text-sm font-bold">
+                النبذة
+              </label>
+
+              <textarea
+                class="input min-h-[130px]"
+                x-model="site.profile.bio"></textarea>
+
+            </div>
+
+          </div>
+
+          <div class="mt-6 flex justify-end border-t border-zinc-100 pt-5 dark:border-zinc-800">
+
+            <button
+              @click="saveProfile()"
+              class="btn-primary">
+
+              <i class="fa-solid fa-floppy-disk ml-1"></i>
+              حفظ التغييرات
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- SOCIAL -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'social'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            الحسابات والإحصائيات
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            إدارة روابط الحسابات وأعداد المتابعين.
+          </p>
+
+        </div>
+
+
+        <div class="grid gap-5 lg:grid-cols-3">
+
+          <!-- TikTok -->
+
+          <div class="card p-5">
+
+            <div class="mb-5 flex items-center gap-3">
+
+              <div class="grid h-12 w-12 place-items-center rounded-2xl bg-black text-xl text-white dark:bg-white dark:text-black">
+                <i class="fa-brands fa-tiktok"></i>
+              </div>
+
+              <div>
+
+                <div class="font-arabic font-bold">
+                  TikTok
+                </div>
+
+                <div class="text-xs text-emerald-600">
+                  بيانات Firestore
+                </div>
+
+              </div>
+
+            </div>
+
+            <label class="mb-2 block text-sm font-bold">
+              اسم المستخدم
+            </label>
+
+            <input
+              class="input mb-4"
+              x-model="social.tiktok.username">
+
+            <label class="mb-2 block text-sm font-bold">
+              الرابط
+            </label>
+
+            <input
+              class="input mb-4"
+              x-model="social.tiktok.url">
+
+            <label class="mb-2 block text-sm font-bold">
+              المتابعون
+            </label>
+
+            <input
+              type="number"
+              class="input"
+              x-model.number="social.tiktok.followers">
+
+            <div class="mt-4 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
+
+              <span class="text-xs text-zinc-500">
+                تحديث تلقائي
+              </span>
+
+              <div
+                @click="social.tiktok.autoUpdate = !social.tiktok.autoUpdate"
+                class="switch"
+                :class="social.tiktok.autoUpdate ? 'on' : ''">
+
+                <div class="switch-dot"></div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- YouTube -->
+
+          <div class="card p-5">
+
+            <div class="mb-5 flex items-center gap-3">
+
+              <div class="grid h-12 w-12 place-items-center rounded-2xl bg-red-600 text-xl text-white">
+                <i class="fa-brands fa-youtube"></i>
+              </div>
+
+              <div>
+
+                <div class="font-arabic font-bold">
+                  YouTube
+                </div>
+
+                <div class="text-xs text-emerald-600">
+                  بيانات Firestore
+                </div>
+
+              </div>
+
+            </div>
+
+            <label class="mb-2 block text-sm font-bold">
+              اسم القناة
+            </label>
+
+            <input
+              class="input mb-4"
+              x-model="social.youtube.username">
+
+            <label class="mb-2 block text-sm font-bold">
+              الرابط
+            </label>
+
+            <input
+              class="input mb-4"
+              x-model="social.youtube.url">
+
+            <label class="mb-2 block text-sm font-bold">
+              المشتركون
+            </label>
+
+            <input
+              type="number"
+              class="input"
+              x-model.number="social.youtube.followers">
+
+            <div class="mt-4 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
+
+              <span class="text-xs text-zinc-500">
+                تحديث تلقائي
+              </span>
+
+              <div
+                @click="social.youtube.autoUpdate = !social.youtube.autoUpdate"
+                class="switch"
+                :class="social.youtube.autoUpdate ? 'on' : ''">
+
+                <div class="switch-dot"></div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- Instagram -->
+
+          <div class="card p-5">
+
+            <div class="mb-5 flex items-center gap-3">
+
+              <div class="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 text-xl text-white">
+                <i class="fa-brands fa-instagram"></i>
+              </div>
+
+              <div>
+
+                <div class="font-arabic font-bold">
+                  Instagram
+                </div>
+
+                <div class="text-xs text-emerald-600">
+                  بيانات Firestore
+                </div>
+
+              </div>
+
+            </div>
+
+            <label class="mb-2 block text-sm font-bold">
+              اسم المستخدم
+            </label>
+
+            <input
+              class="input mb-4"
+              x-model="social.instagram.username">
+
+            <label class="mb-2 block text-sm font-bold">
+              الرابط
+            </label>
+
+            <input
+              class="input mb-4"
+              x-model="social.instagram.url">
+
+            <label class="mb-2 block text-sm font-bold">
+              المتابعون
+            </label>
+
+            <input
+              type="number"
+              class="input"
+              x-model.number="social.instagram.followers">
+
+            <div class="mt-4 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
+
+              <span class="text-xs text-zinc-500">
+                تحديث تلقائي
+              </span>
+
+              <div
+                @click="social.instagram.autoUpdate = !social.instagram.autoUpdate"
+                class="switch"
+                :class="social.instagram.autoUpdate ? 'on' : ''">
+
+                <div class="switch-dot"></div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="mt-6 flex justify-end">
+
+          <button
+            @click="saveSocial()"
+            class="btn-primary">
+
+            <i class="fa-solid fa-floppy-disk ml-1"></i>
+            حفظ الحسابات
+
+          </button>
+
+        </div>
+
+        <div class="card mt-6 p-6">
+
+          <div class="flex items-start gap-4">
+
+            <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-orange-100 text-accent dark:bg-orange-950/30">
+              <i class="fa-solid fa-circle-info"></i>
+            </div>
+
+            <div>
+
+              <h3 class="font-arabic font-bold">
+                التحديث التلقائي
+              </h3>
+
+              <p class="mt-1 max-w-3xl text-sm leading-6 text-zinc-500">
+                أرقام المتابعين الحالية محفوظة في Firestore.
+                ربط APIs الحقيقية للمنصات سيتم في مرحلة لاحقة، لأن Firebase وحده
+                لا يستطيع معرفة أرقام المتابعين من TikTok أو Instagram أو YouTube.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- SERVICES -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'services'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            أقسام المحتوى
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            إدارة البطاقات الموجودة في قسم المحتوى.
+          </p>
+
+        </div>
+
+        <div class="grid gap-5 lg:grid-cols-3">
+
+          <template x-for="service in services" :key="service.id">
+
+            <div class="card p-5">
+
+              <div class="mb-5 flex items-center justify-between">
+
+                <div class="grid h-12 w-12 place-items-center rounded-2xl bg-orange-100 text-xl text-accent dark:bg-orange-950/30">
+
+                  <i :class="service.icon"></i>
+
+                </div>
+
+              </div>
+
+              <label class="mb-2 block text-sm font-bold">
+                العنوان
+              </label>
+
+              <input
+                class="input mb-4"
+                x-model="service.title">
+
+              <label class="mb-2 block text-sm font-bold">
+                الوصف
+              </label>
+
+              <textarea
+                class="input min-h-[100px]"
+                x-model="service.description">
+              </textarea>
+
+            </div>
+
+          </template>
+
+        </div>
+
+        <div class="mt-5 flex justify-end">
+
+          <button
+            @click="saveServices()"
+            class="btn-primary">
+
+            <i class="fa-solid fa-floppy-disk ml-1"></i>
+            حفظ الأقسام
+
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- VIDEOS -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'videos'" x-cloak class="fade-enter">
+
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+
+          <div>
+
+            <h2 class="font-arabic text-2xl font-extrabold">
+              أبرز الفيديوهات
+            </h2>
+
+            <p class="mt-1 text-sm text-zinc-500">
+              إضافة وتعديل وحذف الفيديوهات التي تظهر في الموقع.
+            </p>
+
+          </div>
+
+          <button
+            @click="newVideo()"
+            class="btn-primary">
+
+            <i class="fa-solid fa-plus ml-1"></i>
+            إضافة فيديو
+
+          </button>
+
+        </div>
+
+
+        <div class="card overflow-hidden">
+
+          <div class="overflow-x-auto">
+
+            <table class="w-full min-w-[850px] text-right">
+
+              <thead class="border-b border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+
+                <tr>
+
+                  <th class="px-5 py-4 text-xs font-bold text-zinc-500">
+                    الفيديو
+                  </th>
+
+                  <th class="px-5 py-4 text-xs font-bold text-zinc-500">
+                    التصنيف
+                  </th>
+
+                  <th class="px-5 py-4 text-xs font-bold text-zinc-500">
+                    المنصة
+                  </th>
+
+                  <th class="px-5 py-4 text-xs font-bold text-zinc-500">
+                    الحالة
+                  </th>
+
+                  <th class="px-5 py-4 text-xs font-bold text-zinc-500">
+                    الإجراءات
+                  </th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                <template x-for="video in videos" :key="video.id">
+
+                  <tr class="table-row border-b border-zinc-100 last:border-0 dark:border-zinc-800">
+
+                    <td class="px-5 py-4">
+
+                      <div class="flex items-center gap-3">
+
+                        <img
+                          :src="video.image"
+                          onerror="this.src='https://placehold.co/80x110/png?text=Video'"
+                          class="h-14 w-10 rounded-lg object-cover"
+                          alt="">
+
+                        <div class="max-w-[300px]">
+
+                          <div
+                            class="truncate font-arabic font-bold"
+                            x-text="video.title">
+                          </div>
+
+                          <div
+                            class="mt-1 truncate text-xs text-zinc-400"
+                            x-text="video.description">
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </td>
+
+                    <td
+                      class="px-5 py-4 text-sm text-zinc-500"
+                      x-text="video.category">
+                    </td>
+
+                    <td class="px-5 py-4">
+
+                      <span class="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-bold dark:bg-zinc-800">
+
+                        <i :class="video.icon"></i>
+
+                        <span x-text="video.platform"></span>
+
+                      </span>
+
+                    </td>
+
+                    <td class="px-5 py-4">
+
+                      <span class="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:bg-emerald-950/30">
+                        منشور
+                      </span>
+
+                    </td>
+
+                    <td class="px-5 py-4">
+
+                      <div class="flex items-center gap-2">
+
+                        <button
+                          @click="editVideo(video)"
+                          class="grid h-9 w-9 place-items-center rounded-xl bg-zinc-100 text-zinc-600 hover:bg-orange-100 hover:text-accent dark:bg-zinc-800">
+
+                          <i class="fa-solid fa-pen text-xs"></i>
+
+                        </button>
+
+                        <button
+                          @click="deleteVideo(video)"
+                          class="grid h-9 w-9 place-items-center rounded-xl bg-zinc-100 text-zinc-600 hover:bg-red-100 hover:text-red-500 dark:bg-zinc-800">
+
+                          <i class="fa-solid fa-trash text-xs"></i>
+
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                </template>
+
+                <tr x-show="videos.length === 0">
+
+                  <td
+                    colspan="5"
+                    class="px-5 py-12 text-center text-sm text-zinc-400">
+
+                    لا توجد فيديوهات حاليًا
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- REVIEWS -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'reviews'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            آراء المتابعين
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            التحكم بالتعليقات والآراء الظاهرة في الموقع.
+          </p>
+
+        </div>
+
+        <div class="grid gap-5 lg:grid-cols-3">
+
+          <template x-for="review in reviews" :key="review.id">
+
+            <div class="card p-5">
+
+              <div class="flex items-center justify-between">
+
+                <div class="flex items-center gap-3">
+
+                  <img
+                    :src="review.image"
+                    onerror="this.src='https://placehold.co/100x100/png?text=User'"
+                    class="h-12 w-12 rounded-full object-cover"
+                    alt="">
+
+                  <div>
+
+                    <div
+                      class="font-arabic font-bold"
+                      x-text="review.name">
+                    </div>
+
+                    <div class="text-xs text-zinc-400">
+                      متابع
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <button
+                  @click="deleteReview(review)"
+                  class="text-zinc-400 hover:text-red-500">
+
+                  <i class="fa-solid fa-trash"></i>
+
+                </button>
+
+              </div>
+
+              <p
+                class="mt-5 text-sm leading-7 text-zinc-500"
+                x-text="review.text">
+              </p>
+
+              <div class="mt-4 flex gap-1 text-xs text-yellow-500">
+
+                <template x-for="i in 5">
+
+                  <i class="fa-solid fa-star"></i>
+
+                </template>
+
+              </div>
+
+            </div>
+
+          </template>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- NAVIGATION -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'navigation'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            القائمة والتنقل
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            تعديل أسماء وروابط عناصر القائمة.
+          </p>
+
+        </div>
+
+        <div class="card p-5">
+
+          <div class="space-y-3">
+
+            <template x-for="item in navigation" :key="item.id">
+
+              <div class="flex items-center gap-3 rounded-2xl border border-zinc-200 p-3 dark:border-zinc-800">
+
+                <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-orange-100 text-accent dark:bg-orange-950/30">
+
+                  <i :class="item.icon"></i>
+
+                </div>
+
+                <div class="grid flex-1 gap-2 md:grid-cols-2">
+
+                  <input
+                    class="input"
+                    x-model="item.title">
+
+                  <input
+                    class="input"
+                    x-model="item.url">
+
+                </div>
+
+              </div>
+
+            </template>
+
+          </div>
+
+          <div class="mt-5 flex justify-end">
+
+            <button
+              @click="saveNavigation()"
+              class="btn-primary">
+
+              حفظ القائمة
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- MEDIA -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'media'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            الصور والملفات
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            مكتبة الوسائط الخاصة بالموقع.
+          </p>
+
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+
+          <template x-for="image in media" :key="image">
+
+            <div class="group overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+
+              <div class="relative aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+
+                <img
+                  :src="image"
+                  class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                  alt="">
+
+              </div>
+
+            </div>
+
+          </template>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- CONTACT -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'contact'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            التواصل
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            التحكم بمحتوى قسم تواصل معنا.
+          </p>
+
+        </div>
+
+        <div class="card p-6">
+
+          <div class="grid gap-5 md:grid-cols-2">
+
+            <div class="md:col-span-2">
+
+              <label class="mb-2 block text-sm font-bold">
+                عنوان القسم
+              </label>
+
+              <input
+                class="input"
+                x-model="site.contact.title">
+
+            </div>
+
+            <div class="md:col-span-2">
+
+              <label class="mb-2 block text-sm font-bold">
+                النص
+              </label>
+
+              <textarea
+                class="input min-h-[120px]"
+                x-model="site.contact.text">
+              </textarea>
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                نص الزر
+              </label>
+
+              <input
+                class="input"
+                x-model="site.contact.buttonText">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                رابط الزر
+              </label>
+
+              <input
+                class="input"
+                x-model="site.contact.buttonUrl">
+
+            </div>
+
+          </div>
+
+          <div class="mt-6 flex justify-end border-t border-zinc-100 pt-5 dark:border-zinc-800">
+
+            <button
+              @click="saveContact()"
+              class="btn-primary">
+
+              حفظ التغييرات
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- FOOTER -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'footer'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            الفوتر
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            تعديل جميع النصوص والروابط الموجودة أسفل الموقع.
+          </p>
+
+        </div>
+
+        <div class="card p-6">
+
+          <div class="grid gap-5 md:grid-cols-2">
+
+            <div class="md:col-span-2">
+
+              <label class="mb-2 block text-sm font-bold">
+                نص الحقوق
+              </label>
+
+              <input
+                class="input"
+                x-model="site.footer.copyright">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                نص المصمم
+              </label>
+
+              <input
+                class="input"
+                x-model="site.footer.designer">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                رابط المصمم
+              </label>
+
+              <input
+                class="input"
+                x-model="site.footer.designerUrl">
+
+            </div>
+
+          </div>
+
+          <div class="mt-6 flex justify-end border-t border-zinc-100 pt-5 dark:border-zinc-800">
+
+            <button
+              @click="saveFooter()"
+              class="btn-primary">
+
+              حفظ التغييرات
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- SEO -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'seo'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            تحسين محركات البحث SEO
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            البيانات التي تظهر لمحركات البحث وعند مشاركة الموقع.
+          </p>
+
+        </div>
+
+        <div class="card p-6">
+
+          <div class="space-y-5">
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                عنوان الموقع
+              </label>
+
+              <input
+                class="input"
+                x-model="site.seo.title">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                الوصف
+              </label>
+
+              <textarea
+                class="input min-h-[120px]"
+                x-model="site.seo.description">
+              </textarea>
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                الكلمات المفتاحية
+              </label>
+
+              <input
+                class="input"
+                x-model="site.seo.keywords">
+
+            </div>
+
+            <div>
+
+              <label class="mb-2 block text-sm font-bold">
+                رابط الموقع الأساسي
+              </label>
+
+              <input
+                class="input"
+                x-model="site.seo.url">
+
+            </div>
+
+          </div>
+
+          <div class="mt-6 flex justify-end border-t border-zinc-100 pt-5 dark:border-zinc-800">
+
+            <button
+              @click="saveSEO()"
+              class="btn-primary">
+
+              حفظ إعدادات SEO
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- DESIGN -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'design'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            التصميم والمظهر
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            التحكم بالهوية البصرية وبعض خيارات المظهر.
+          </p>
+
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-2">
+
+          <div class="card p-6">
+
+            <h3 class="font-arabic text-lg font-bold">
+              اللون الأساسي
+            </h3>
+
+            <div class="mt-5 flex items-center gap-4">
+
+              <input
+                type="color"
+                class="h-14 w-14 cursor-pointer rounded-2xl border-0 bg-transparent"
+                x-model="site.design.accent">
+
+              <div class="flex-1">
+
+                <label class="mb-2 block text-xs text-zinc-500">
+                  HEX
+                </label>
+
+                <input
+                  class="input"
+                  x-model="site.design.accent">
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="card p-6">
+
+            <h3 class="font-arabic text-lg font-bold">
+              الوضع الافتراضي
+            </h3>
+
+            <div class="mt-5 flex items-center justify-between">
+
+              <div>
+
+                <div class="font-arabic font-bold">
+                  الوضع الداكن
+                </div>
+
+                <div class="mt-1 text-xs text-zinc-500">
+                  تحديد المظهر الافتراضي للموقع.
+                </div>
+
+              </div>
+
+              <div
+                @click="dark = !dark"
+                class="switch"
+                :class="dark ? 'on' : ''">
+
+                <div class="switch-dot"></div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="mt-5 flex justify-end">
+
+          <button
+            @click="saveDesign()"
+            class="btn-primary">
+
+            حفظ التصميم
+
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================= -->
+      <!-- SETTINGS -->
+      <!-- ================================================= -->
+
+      <section x-show="page === 'settings'" x-cloak class="fade-enter">
+
+        <div class="mb-6">
+
+          <h2 class="font-arabic text-2xl font-extrabold">
+            الإعدادات العامة
+          </h2>
+
+          <p class="mt-1 text-sm text-zinc-500">
+            إعدادات النظام والموقع.
+          </p>
+
+        </div>
+
+        <div class="space-y-6">
+
+          <div class="card p-6">
+
+            <h3 class="font-arabic text-xl font-bold">
+              معلومات الموقع
+            </h3>
+
+            <div class="mt-5 grid gap-5 md:grid-cols-2">
+
+              <div>
+
+                <label class="mb-2 block text-sm font-bold">
+                  اسم الموقع
+                </label>
+
+                <input
+                  class="input"
+                  x-model="site.settings.siteName">
+
+              </div>
+
+              <div>
+
+                <label class="mb-2 block text-sm font-bold">
+                  اللغة
+                </label>
+
+                <select
+                  class="input"
+                  x-model="site.settings.language">
+
+                  <option value="ar">
+                    العربية
+                  </option>
+
+                  <option value="en">
+                    English
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+            <div class="mt-5 flex justify-end">
+
+              <button
+                @click="saveSettings()"
+                class="btn-primary">
+
+                حفظ الإعدادات
+
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div class="card border-red-200 p-6 dark:border-red-950">
+
+            <h3 class="font-arabic text-xl font-bold text-red-500">
+              منطقة خطرة
+            </h3>
+
+            <p class="mt-1 text-sm text-zinc-500">
+              هذه العمليات لا يمكن التراجع عنها.
+            </p>
+
+            <div class="mt-5 flex flex-wrap gap-3">
+
+              <button
+                @click="clearLocalData()"
+                class="rounded-xl bg-red-50 px-4 py-2.5 text-sm font-bold text-red-600 dark:bg-red-950/30">
+
+                مسح البيانات المحلية
+
+              </button>
+
+              <button
+                @click="logout()"
+                class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white">
+
+                تسجيل الخروج
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <!-- ===================================================== -->
+  <!-- VIDEO MODAL -->
+  <!-- ===================================================== -->
+
+  <div
+    x-show="videoModal"
+    x-cloak
+    x-transition.opacity
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+
+    <div
+      @click.outside="videoModal = false"
+      class="w-full max-w-2xl rounded-[28px] bg-white shadow-2xl dark:bg-zinc-950">
+
+      <div class="flex items-center justify-between border-b border-zinc-100 p-5 dark:border-zinc-800">
+
+        <div>
+
+          <h3 class="font-arabic text-xl font-bold">
+
+            <span
+              x-text="editingVideo ? 'تعديل الفيديو' : 'إضافة فيديو'">
+            </span>
+
+          </h3>
+
+          <p class="mt-1 text-xs text-zinc-500">
+            أدخل بيانات الفيديو الذي سيظهر في الموقع.
+          </p>
+
+        </div>
+
+        <button
+          @click="videoModal = false"
+          class="grid h-10 w-10 place-items-center rounded-xl bg-zinc-100 text-zinc-500 dark:bg-zinc-900">
+
+          <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+      </div>
+
+
+      <div class="max-h-[70vh] overflow-y-auto p-5">
+
+        <div class="grid gap-5 md:grid-cols-2">
+
+          <div class="md:col-span-2">
+
+            <label class="mb-2 block text-sm font-bold">
+              عنوان الفيديو
+            </label>
+
+            <input
+              class="input"
+              x-model="videoForm.title"
+              placeholder="مثال: ثورة الـ٢٦ من سبتمبر">
+
+          </div>
+
+          <div>
+
+            <label class="mb-2 block text-sm font-bold">
+              التصنيف
+            </label>
+
+            <input
+              class="input"
+              x-model="videoForm.category"
+              placeholder="الثورات اليمنية">
+
+          </div>
+
+          <div>
+
+            <label class="mb-2 block text-sm font-bold">
+              المنصة
+            </label>
+
+            <select
+              class="input"
+              x-model="videoForm.platform">
+
+              <option>TikTok</option>
+              <option>Instagram</option>
+              <option>YouTube</option>
+
+            </select>
+
+          </div>
+
+          <div class="md:col-span-2">
+
+            <label class="mb-2 block text-sm font-bold">
+              وصف الفيديو
+            </label>
+
+            <textarea
+              class="input min-h-[110px]"
+              x-model="videoForm.description"
+              placeholder="وصف مختصر للفيديو">
+            </textarea>
+
+          </div>
+
+          <div>
+
+            <label class="mb-2 block text-sm font-bold">
+              رابط الفيديو
+            </label>
+
+            <input
+              class="input"
+              x-model="videoForm.url"
+              placeholder="https://...">
+
+          </div>
+
+          <div>
+
+            <label class="mb-2 block text-sm font-bold">
+              رابط الصورة
+            </label>
+
+            <input
+              class="input"
+              x-model="videoForm.image"
+              placeholder="../img/m1.jpg">
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="flex justify-end gap-3 border-t border-zinc-100 p-5 dark:border-zinc-800">
+
+        <button
+          @click="videoModal = false"
+          class="btn-secondary">
+
+          إلغاء
+
+        </button>
+
+        <button
+          @click="saveVideo()"
+          class="btn-primary">
+
+          <i class="fa-solid fa-floppy-disk ml-1"></i>
+          حفظ الفيديو
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- TOAST -->
+
+  <div
+    x-show="toastVisible"
+    x-cloak
+    x-transition
+    class="fixed bottom-5 left-5 z-[200]">
+
+    <div class="flex items-center gap-3 rounded-2xl bg-zinc-950 px-5 py-3.5 text-sm font-bold text-white shadow-2xl">
+
+      <span class="grid h-7 w-7 place-items-center rounded-lg bg-emerald-500">
+
+        <i class="fa-solid fa-check text-xs"></i>
+
+      </span>
+
+      <span x-text="toastMessage"></span>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- ALPINE -->
+<!-- ===================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+
+<!-- ===================================================== -->
+<!-- FIREBASE + ADMIN APP -->
+<!-- ===================================================== -->
+
+<script type="module">
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+
+  /* =====================================================
+     FIREBASE CONFIG
+  ===================================================== */
+
+  const firebaseConfig = {
+
+  apiKey: "AIzaSyC2W1Du74WNqoMjXc82DKYIwK2HAut0zo",
+
+  authDomain:
+    "mohomx-portfolio.firebaseapp.com",
+
+  projectId:
+    "mohomx-portfolio",
+
+  storageBucket:
+    "mohomx-portfolio.firebasestorage.app",
+
+  messagingSenderId:
+    "973822405323",
+
+  appId:
+    "1:973822405323:web:9c062b7ecdec588f25c94e"
+
+};
+
+  /* =====================================================
+     INITIALIZE FIREBASE
+  ===================================================== */
+
+  const firebaseApp =
+    initializeApp(firebaseConfig);
+
+  const auth =
+    getAuth(firebaseApp);
+
+  const db =
+    getFirestore(firebaseApp);
+
+
+  /* =====================================================
+     EXPOSE FIREBASE
+  ===================================================== */
+
+  window.firebaseServices = {
+
+    app: firebaseApp,
+
+    auth: auth,
+
+    db: db,
+
+    signInWithEmailAndPassword,
+
+    signOut,
+
+    onAuthStateChanged,
+
+    collection,
+
+    getDocs,
+
+    addDoc,
+
+    updateDoc,
+
+    deleteDoc,
+
+    doc,
+
+    getDoc,
+
+    setDoc,
+
+    serverTimestamp
+
+  };
+
+
+  /* =====================================================
+     AUTH STATE
+  ===================================================== */
+
+  onAuthStateChanged(auth, async (user) => {
+
+    if (!window.adminAlpine) {
+      return;
+    }
+
+    await window.adminAlpine.handleAuthState(user);
+
+  });
+
+</script>
+
+
+<script>
+
+function adminApp() {
+
+  return {
+
+    /* =================================================
+       STATE
+    ================================================= */
+
+    page: 'dashboard',
+
+    dark: false,
+
+    mobileSidebar: false,
+
+    videoModal: false,
+
+    editingVideo: false,
+
+    toastVisible: false,
+
+    toastMessage: '',
+
+    authenticated: false,
+
+    firebaseConnected: false,
+
+    currentUser: null,
+
+    loginLoading: false,
+
+    loginError: '',
+
+    showPassword: false,
+
+    _toastTimer: null,
+
+
+    /* =================================================
+       LOGIN
+    ================================================= */
+
+    loginForm: {
+
+      email: '',
+
+      password: ''
+
+    },
+
+
+    /* =================================================
+       SITE DATA
+    ================================================= */
+
+    site: {
+
+      hero: {
+
+        eyebrow:
+          'صانع محتوى في مواقع التواصل الاجتماعي',
+
+        title:
+          'ارحبوا',
+
+        typing:
+          'ويالله حيهم',
+
+        description:
+          'انا محمد الحميقاني. صانع محتوى ومؤثر على مواقع التواصل الاجتماعي، أقدم محتوى متنوع يجمع بين الفائدة والترفيه والتفاعل.',
+
+        button1Text:
+          'مشاهدة ابرز الفيديوهات',
+
+        button1Url:
+          '../projects.html',
+
+        button2Text:
+          'دعمكم لنا',
+
+        button2Url:
+          '#reviews'
+
+      },
+
+
+      profile: {
+
+        name:
+          'محمد الحميقاني',
+
+        role:
+          'صانع محتوى',
+
+        username:
+          '@mohomx',
+
+        location:
+          'اليمن',
+
+        bio:
+          'صانع محتوى ومؤثر على مواقع التواصل الاجتماعي، أقدم محتوى متنوع يجمع بين القصص والمعلومات والترفيه والتفاعل.'
+
+      },
+
+
+      contact: {
+
+        title:
+          'تواصل بنا',
+
+        text:
+          'لديك استفسار أو ترغب في التواصل؟ يمكنك التواصل معي عبر حساباتي في مواقع التواصل الاجتماعي.',
+
+        buttonText:
+          'تواصل معي',
+
+        buttonUrl:
+          'https://www.tiktok.com/@mohomx'
+
+      },
+
+
+      footer: {
+
+        copyright:
+          'جميع الحقوق محفوظه لدى محمد الحميقاني',
+
+        designer:
+          'تم برمجة تصميم الموقع بواسطة الحميقاني @vw.hqy',
+
+        designerUrl:
+          'https://lbegey78.gumroad.com/'
+
+      },
+
+
+      seo: {
+
+        title:
+          'محمد الحميقاني | صانع محتوى',
+
+        description:
+          'محمد الحميقاني، صانع محتوى يمني يقدم محتوى متنوعًا في مواقع التواصل الاجتماعي.',
+
+        keywords:
+          'محمد الحميقاني, mohomx, صانع محتوى, اليمن',
+
+        url:
+          'https://example.com'
+
+      },
+
+
+      design: {
+
+        accent:
+          '#FF6B2B'
+
+      },
+
+
+      settings: {
+
+        siteName:
+          'محمد الحميقاني',
+
+        language:
+          'ar'
+
+      }
+
+    },
+
+
+    /* =================================================
+       SOCIAL
+    ================================================= */
+
+    social: {
+
+      tiktok: {
+
+        username:
+          '@mohomx',
+
+        url:
+          'https://www.tiktok.com/@mohomx',
+
+        followers:
+          456000,
+
+        autoUpdate:
+          true,
+
+        get followersDisplay() {
+
+          return this.followers >= 1000
+            ? Math.round(this.followers / 1000) + 'K'
+            : this.followers;
+
+        }
+
+      },
+
+
+      youtube: {
+
+        username:
+          '@mohomx',
+
+        url:
+          'https://youtube.com/@mohomx',
+
+        followers:
+          10000,
+
+        autoUpdate:
+          false
+
+      },
+
+
+      instagram: {
+
+        username:
+          '@mohomx',
+
+        url:
+          'https://www.instagram.com/mohomx',
+
+        followers:
+          34000,
+
+        autoUpdate:
+          false
+
+      }
+
+    },
+
+
+    /* =================================================
+       SERVICES
+    ================================================= */
+
+    services: [
+
+      {
+
+        id:
+          'service-1',
+
+        icon:
+          'fa-solid fa-book-open',
+
+        title:
+          'قصص ومعلومات',
+
+        description:
+          'قصص ومعلومات مفيدة وممتعة.'
+
+      },
+
+      {
+
+        id:
+          'service-2',
+
+        icon:
+          'fa-solid fa-face-laugh-beam',
+
+        title:
+          'الترفيه والتفاعل',
+
+        description:
+          'محتوى ترفيهي وتفاعلي مع المتابعين.'
+
+      },
+
+      {
+
+        id:
+          'service-3',
+
+        icon:
+          'fa-solid fa-layer-group',
+
+        title:
+          'المواضيع المتنوعة',
+
+        description:
+          'مواضيع متنوعة تهم الجمهور.'
+
+      }
+
+    ],
+
+
+    /* =================================================
+       VIDEOS
+    ================================================= */
+
+    videos: [],
+
+
+    /* =================================================
+       REVIEWS
+    ================================================= */
+
+    reviews: [],
+
+
+    /* =================================================
+       NAVIGATION
+    ================================================= */
+
+    navigation: [
+
+      {
+
+        id:
+          'nav-1',
+
+        icon:
+          'fa-solid fa-house',
+
+        title:
+          'الرئيسية',
+
+        url:
+          '#hero'
+
+      },
+
+      {
+
+        id:
+          'nav-2',
+
+        icon:
+          'fa-solid fa-layer-group',
+
+        title:
+          'المحتوى',
+
+        url:
+          '#services'
+
+      },
+
+      {
+
+        id:
+          'nav-3',
+
+        icon:
+          'fa-solid fa-film',
+
+        title:
+          'أبرز الفيديوهات',
+
+        url:
+          'projects.html'
+
+      },
+
+      {
+
+        id:
+          'nav-4',
+
+        icon:
+          'fa-solid fa-comments',
+
+        title:
+          'من كلامكم',
+
+        url:
+          '#reviews'
+
+      },
+
+      {
+
+        id:
+          'nav-5',
+
+        icon:
+          'fa-solid fa-envelope',
+
+        title:
+          'تواصل معنا',
+
+        url:
+          '#contact'
+
+      }
+
+    ],
+
+
+    /* =================================================
+       MEDIA
+    ================================================= */
+
+    media: [
+
+      '../img/m.png',
+
+      '../img/m1.jpg',
+
+      '../img/m2.jpg',
+
+      '../img/m3.jpg',
+
+      '../img/u.png'
+
+    ],
+
+
+    /* =================================================
+       VIDEO FORM
+    ================================================= */
+
+    videoForm: {
+
+      title: '',
+
+      category: '',
+
+      platform: 'TikTok',
+
+      description: '',
+
+      url: '',
+
+      image: ''
+
+    },
+
+
+    /* =================================================
+       INIT
+    ================================================= */
+
+    async init() {
+
+      window.adminAlpine = this;
+
+      const savedTheme =
+        localStorage.getItem('admin-theme');
+
+      if (savedTheme === 'dark') {
+
+        this.dark = true;
+
+      }
+
+      window.addEventListener(
+        'keydown',
+        (event) => {
+
+          if (event.key === 'Escape') {
+
+            this.videoModal = false;
+
+            this.mobileSidebar = false;
+
+          }
+
+        }
+      );
+
+    },
+
+
+    /* =================================================
+       AUTH STATE
+    ================================================= */
+
+    async handleAuthState(user) {
+
+      if (!user) {
+
+        this.authenticated = false;
+
+        this.firebaseConnected = false;
+
+        this.currentUser = null;
+
+        return;
+
+      }
+
+
+      /*
+       * حماية إضافية في الواجهة.
+       * الحماية الحقيقية موجودة أيضًا في Firestore Rules.
+       */
+
+      const ADMIN_UID =
+        'FC4QogHGgmgars0mbg9adE1Hx4N2';
+
+
+      if (user.uid !== ADMIN_UID) {
+
+        await window.firebaseServices.signOut(
+          window.firebaseServices.auth
+        );
+
+        this.authenticated = false;
+
+        this.firebaseConnected = false;
+
+        this.loginError =
+          'هذا الحساب غير مصرح له بالدخول إلى لوحة التحكم.';
+
+        return;
+
+      }
+
+
+      this.currentUser = user;
+
+      this.authenticated = true;
+
+      this.firebaseConnected = true;
+
+      this.loginError = '';
+
+
+      await this.loadFirebaseData();
+
+    },
+
+
+    /* =================================================
+       LOGIN
+    ================================================= */
+
+    async login() {
+
+      this.loginError = '';
+
+      this.loginLoading = true;
+
+
+      try {
+
+        await window.firebaseServices
+          .signInWithEmailAndPassword(
+
+            window.firebaseServices.auth,
+
+            this.loginForm.email.trim(),
+
+            this.loginForm.password
+
+          );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        if (
+          error.code ===
+          'auth/invalid-credential'
+        ) {
+
+          this.loginError =
+            'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+
+        }
+
+        else if (
+          error.code ===
+          'auth/too-many-requests'
+        ) {
+
+          this.loginError =
+            'تمت محاولات كثيرة. حاول لاحقًا.';
+
+        }
+
+        else {
+
+          this.loginError =
+            'حدث خطأ أثناء تسجيل الدخول.';
+
+        }
+
+      }
+
+      finally {
+
+        this.loginLoading = false;
+
+      }
+
+    },
+
+
+    /* =================================================
+       LOGOUT
+    ================================================= */
+
+    async logout() {
+
+      try {
+
+        await window.firebaseServices.signOut(
+          window.firebaseServices.auth
+        );
+
+        this.toast('تم تسجيل الخروج');
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        this.toast(
+          'حدث خطأ أثناء تسجيل الخروج'
+        );
+
+      }
+
+    },
+
+
+    /* =================================================
+       LOAD FIREBASE DATA
+    ================================================= */
+
+    async loadFirebaseData() {
+
+      try {
+
+        await Promise.all([
+
+          this.loadVideos(),
+
+          this.loadReviews(),
+
+          this.loadSiteSettings(),
+
+          this.loadServices(),
+
+          this.loadSocial(),
+
+          this.loadNavigation()
+
+        ]);
+
+        this.firebaseConnected = true;
+
+      }
+
+      catch (error) {
+
+        console.error(
+          'Firebase load error:',
+          error
+        );
+
+        this.firebaseConnected = false;
+
+        this.toast(
+          'تم تسجيل الدخول لكن حدث خطأ أثناء تحميل البيانات'
+        );
+
+      }
+
+    },
+
+
+    /* =================================================
+       VIDEOS
+    ================================================= */
+
+    async loadVideos() {
+
+      const snapshot =
+        await window.firebaseServices.getDocs(
+
+          window.firebaseServices.collection(
+            window.firebaseServices.db,
+            'videos'
+          )
+
+        );
+
+
+      this.videos =
+        snapshot.docs.map((item) => ({
+
+          id:
+            item.id,
+
+          ...item.data()
+
+        }));
+
+
+      this.videos.sort(
+        (a, b) =>
+          (a.order || 0) -
+          (b.order || 0)
+      );
+
+    },
+
+
+    async saveVideo() {
+
+      if (
+        !this.videoForm.title ||
+        !this.videoForm.title.trim()
+      ) {
+
+        this.toast(
+          'اكتب عنوان الفيديو أولاً'
+        );
+
+        return;
+
+      }
+
+
+      const icon =
+        this.videoForm.platform === 'TikTok'
+
+          ? 'fa-brands fa-tiktok'
+
+          : this.videoForm.platform === 'Instagram'
+
+            ? 'fa-brands fa-instagram'
+
+            : 'fa-brands fa-youtube';
+
+
+      const data = {
+
+        title:
+          this.videoForm.title.trim(),
+
+        category:
+          this.videoForm.category.trim(),
+
+        description:
+          this.videoForm.description.trim(),
+
+        platform:
+          this.videoForm.platform,
+
+        icon:
+          icon,
+
+        image:
+          this.videoForm.image.trim() ||
+          '../img/m1.jpg',
+
+        url:
+          this.videoForm.url.trim(),
+
+        visible:
+          true,
+
+        updatedAt:
+          window.firebaseServices.serverTimestamp()
+
+      };
+
+
+      try {
+
+        if (this.editingVideo) {
+
+          await window.firebaseServices.updateDoc(
+
+            window.firebaseServices.doc(
+
+              window.firebaseServices.db,
+
+              'videos',
+
+              this.videoForm.id
+
+            ),
+
+            data
+
+          );
+
+          this.toast(
+            'تم تعديل الفيديو وحفظه في Firebase'
+          );
+
+        }
+
+        else {
+
+          data.createdAt =
+            window.firebaseServices.serverTimestamp();
+
+          data.order =
+            this.videos.length + 1;
+
+
+          const created =
+            await window.firebaseServices.addDoc(
+
+              window.firebaseServices.collection(
+
+                window.firebaseServices.db,
+
+                'videos'
+
+              ),
+
+              data
+
+            );
+
+
+          this.toast(
+            'تمت إضافة الفيديو إلى Firebase'
+          );
+
+        }
+
+
+        await this.loadVideos();
+
+        this.videoModal = false;
+
+        this.editingVideo = false;
+
+        this.resetVideoForm();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        this.toast(
+          'تعذر حفظ الفيديو في Firebase'
+        );
+
+      }
+
+    },
+
+
+    editVideo(video) {
+
+      this.editingVideo = true;
+
+      this.videoForm = {
+
+        id:
+          video.id,
+
+        title:
+          video.title || '',
+
+        category:
+          video.category || '',
+
+        platform:
+          video.platform || 'TikTok',
+
+        description:
+          video.description || '',
+
+        url:
+          video.url || '',
+
+        image:
+          video.image || ''
+
+      };
+
+      this.videoModal = true;
+
+    },
+
+
+    newVideo() {
+
+      this.editingVideo = false;
+
+      this.resetVideoForm();
+
+      this.videoModal = true;
+
+    },
+
+
+    resetVideoForm() {
+
+      this.videoForm = {
+
+        id: '',
+
+        title: '',
+
+        category: '',
+
+        platform: 'TikTok',
+
+        description: '',
+
+        url: '',
+
+        image: ''
+
+      };
+
+    },
+
+
+    async deleteVideo(video) {
+
+      if (
+        !confirm(
+          `هل أنت متأكد من حذف "${video.title}"؟`
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        await window.firebaseServices.deleteDoc(
+
+          window.firebaseServices.doc(
+
+            window.firebaseServices.db,
+
+            'videos',
+
+            video.id
+
+          )
+
+        );
+
+
+        this.videos =
+          this.videos.filter(
+            item => item.id !== video.id
+          );
+
+
+        this.toast(
+          'تم حذف الفيديو'
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        this.toast(
+          'تعذر حذف الفيديو'
+        );
+
+      }
+
+    },
+
+
+    /* =================================================
+       REVIEWS
+    ================================================= */
+
+    async loadReviews() {
+
+      const snapshot =
+        await window.firebaseServices.getDocs(
+
+          window.firebaseServices.collection(
+
+            window.firebaseServices.db,
+
+            'reviews'
+
+          )
+
+        );
+
+
+      this.reviews =
+        snapshot.docs.map((item) => ({
+
+          id:
+            item.id,
+
+          ...item.data()
+
+        }));
+
+    },
+
+
+    async deleteReview(review) {
+
+      if (
+        !confirm(
+          'هل تريد حذف هذا الرأي؟'
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        await window.firebaseServices.deleteDoc(
+
+          window.firebaseServices.doc(
+
+            window.firebaseServices.db,
+
+            'reviews',
+
+            review.id
+
+          )
+
+        );
+
+
+        this.reviews =
+          this.reviews.filter(
+            item => item.id !== review.id
+          );
+
+
+        this.toast(
+          'تم حذف الرأي'
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        this.toast(
+          'تعذر حذف الرأي'
+        );
+
+      }
+
+    },
+
+
+    /* =================================================
+       SITE SETTINGS
+    ================================================= */
+
+    async loadSiteSettings() {
+
+      const snapshot =
+        await window.firebaseServices.getDoc(
+
+          window.firebaseServices.doc(
+
+            window.firebaseServices.db,
+
+            'settings',
+
+            'site'
+
+          )
+
+        );
+
+
+      if (
+        snapshot.exists()
+      ) {
+
+        const data =
+          snapshot.data();
+
+
+        this.site =
+          this.deepMerge(
+            this.site,
+            data
+          );
+
+      }
+
+    },
+
+
+    async saveSiteSection(section) {
+
+      try {
+
+        await window.firebaseServices.setDoc(
+
+          window.firebaseServices.doc(
+
+            window.firebaseServices.db,
+
+            'settings',
+
+            'site'
+
+          ),
+
+          {
+
+            [section]:
+              this.site[section],
+
+            updatedAt:
+              window.firebaseServices.serverTimestamp()
+
+          },
+
+          {
+
+            merge: true
+
+          }
+
+        );
+
+
+        this.toast(
+          'تم حفظ التغييرات في Firebase'
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        this.toast(
+          'تعذر حفظ الإعدادات'
+        );
+
+      }
+
+    },
+
+
+    saveHero() {
+
+      this.saveSiteSection('hero');
+
+    },
+
+
+    saveProfile() {
+
+      this.saveSiteSection('profile');
+
+    },
+
+
+    saveContact() {
+
+      this.saveSiteSection('contact');
+
+    },
+
+
+    saveFooter() {
+
+      this.saveSiteSection('footer');
+
+    },
+
+
+    saveSEO() {
+
+      this.saveSiteSection('seo');
+
+    },
+
+
+    saveDesign() {
+
+      this.saveSiteSection('design');
+
+    },
+
+
+    saveSettings() {
+
+      this.saveSiteSection('settings');
+
+    },
+
+
+    /* =================================================
+       SERVICES
+    ================================================= */
+
+    async loadServices() {
+
+      const snapshot =
+        await window.firebaseServices.getDocs(
+
+          window.firebaseServices.collection(
+
+            window.firebaseServices.db,
+
+            'services'
+
+          )
+
+        );
+
+
+      if (
+        snapshot.empty
+      ) {
+
+        return;
+
+      }
+
+
+      this.services =
+        snapshot.docs.map((item) => ({
+
+          id:
+            item.id,
+
+          ...item.data()
+
+        }));
+
+
+      this.services.sort(
+        (a, b) =>
+          (a.order || 0) -
+          (b.order || 0)
+      );
+
+    },
+
+
+    async saveServices() {
+
+      try {
+
+        for (
+          let i = 0;
+          i < this.services.length;
+          i++
+        ) {
+
+          const service =
+            this.services[i];
+
+
+          await window.firebaseServices.setDoc(
+
+            window.firebaseServices.doc(
+
+              window.firebaseServices.db,
+
+              'services',
+
+              String(service.id)
+
+            ),
+
+            {
+
+              icon:
+                service.icon,
+
+              title:
+                service.title,
+
+              description:
+                service.description,
+
+              visible:
+                true,
+
+              order:
+                i + 1,
+
+              updatedAt:
+                window.firebaseServices.serverTimestamp()
+
+            },
+
+            {
+
+              merge: true
+
+            }
+
+          );
+
+        }
+
+
+        this.toast(
+          'تم حفظ أقسام المحتوى'
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        this.toast(
+          'تعذر حفظ الأقسام'
+        );
+
+      }
+
+    },
+
+
+    /* =================================================
+       SOCIAL
+    ================================================= */
+
+    async loadSocial() {
+
+      const snapshot =
+        await window.firebaseServices.getDoc(
+
+          window.firebaseServices.doc(
+
+            window.firebaseServices.db,
+
+            'settings',
+
+            'social'
+
+          )
+
+        );
+
+
+      if (
+        snapshot.exists()
+      ) {
+
+        this.social =
+          this.deepMerge(
+
+            this.social,
+
+            snapshot.data()
+
+          );
+
+      }
+
+    },
+
+
+    async saveSocial() {
+
+      try {
+
+        await window.firebaseServices.setDoc(
+
+          window.firebaseServices.doc(
+
+            window.firebaseServices.db,
+
+            'settings',
+
+            'social'
+
+          ),
+
+          {
+
+            ...this.social,
+
+            updatedAt:
+              window.firebaseServices.serverTimestamp()
+
+          },
+
+          {
+
+            merge: true
+
+          }
+
+        );
+
+
+        this.toast(
+          'تم حفظ الحسابات والإحصائيات'
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        this.toast(
+          'تعذر حفظ الحسابات'
+        );
+
+      }
+
+    },
+
+
+    /* =================================================
+       NAVIGATION
+    ================================================= */
+
+    async loadNavigation() {
+
+      const snapshot =
+        await window.firebaseServices.getDoc(
+
+          window.firebaseServices.doc(
+
+            window.firebaseServices.db,
+
+            'settings',
+
+            'navigation'
+
+          )
+
+        );
+
+
+      if (
+        snapshot.exists()
+      ) {
+
+        this.navigation =
+          snapshot.data().items ||
+          this.navigation;
+
+      }
+
+    },
+
+
+    async saveNavigation() {
+
+      try {
+
+        await window.firebaseServices.setDoc(
+
+          window.firebaseServices.doc(
+
+            window.firebaseServices.db,
+
+            'settings',
+
+            'navigation'
+
+          ),
+
+          {
+
+            items:
+              this.navigation,
+
+            updatedAt:
+              window.firebaseServices.serverTimestamp()
+
+          },
+
+          {
+
+            merge: true
+
+          }
+
+        );
+
+
+        this.toast(
+          'تم حفظ القائمة والتنقل'
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        this.toast(
+          'تعذر حفظ القائمة'
+        );
+
+      }
+
+    },
+
+
+    /* =================================================
+       DEEP MERGE
+    ================================================= */
+
+    deepMerge(target, source) {
+
+      const result =
+        structuredClone(target);
+
+
+      Object.keys(source || {}).forEach(
+        key => {
+
+          if (
+
+            source[key] &&
+
+            typeof source[key] === 'object' &&
+
+            !Array.isArray(source[key])
+
+          ) {
+
+            result[key] =
+              this.deepMerge(
+
+                result[key] || {},
+
+                source[key]
+
+              );
+
+          }
+
+          else {
+
+            result[key] =
+              source[key];
+
+          }
+
+        }
+      );
+
+
+      return result;
+
+    },
+
+
+    /* =================================================
+       NAVIGATION
+    ================================================= */
+
+    go(section) {
+
+      this.page =
+        section;
+
+      this.mobileSidebar =
+        false;
+
+      window.scrollTo({
+
+        top: 0,
+
+        behavior: 'smooth'
+
+      });
+
+    },
+
+
+    /* =================================================
+       PAGE TITLES
+    ================================================= */
+
+    pageTitle() {
+
+      const titles = {
+
+        dashboard:
+          'نظرة عامة',
+
+        hero:
+          'الرئيسية و Hero',
+
+        profile:
+          'الملف الشخصي',
+
+        social:
+          'الحسابات والإحصائيات',
+
+        services:
+          'أقسام المحتوى',
+
+        videos:
+          'أبرز الفيديوهات',
+
+        reviews:
+          'آراء المتابعين',
+
+        navigation:
+          'القائمة والتنقل',
+
+        media:
+          'الصور والملفات',
+
+        contact:
+          'التواصل',
+
+        footer:
+          'الفوتر',
+
+        seo:
+          'تحسين محركات البحث',
+
+        design:
+          'التصميم والمظهر',
+
+        settings:
+          'الإعدادات العامة'
+
+      };
+
+
+      return (
+
+        titles[this.page] ||
+
+        'لوحة التحكم'
+
+      );
+
+    },
+
+
+    /* =================================================
+       DARK MODE
+    ================================================= */
+
+    toggleDark() {
+
+      this.dark =
+        !this.dark;
+
+
+      localStorage.setItem(
+
+        'admin-theme',
+
+        this.dark
+          ? 'dark'
+          : 'light'
+
+      );
+
+    },
+
+
+    /* =================================================
+       LOCAL DATA
+    ================================================= */
+
+    clearLocalData() {
+
+      if (
+        !confirm(
+          'هل تريد مسح إعدادات لوحة التحكم المحلية؟'
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      localStorage.removeItem(
+        'admin-theme'
+      );
+
+
+      this.dark =
+        false;
+
+
+      this.toast(
+        'تم مسح البيانات المحلية'
+      );
+
+    },
+
+
+    /* =================================================
+       TOAST
+    ================================================= */
+
+    toast(message) {
+
+      this.toastMessage =
+        message;
+
+      this.toastVisible =
+        true;
+
+
+      clearTimeout(
+        this._toastTimer
+      );
+
+
+      this._toastTimer =
+        setTimeout(
+
+          () => {
+
+            this.toastVisible =
+              false;
+
+          },
+
+          2500
+
+        );
+
+    }
+
+  };
+
+}
+
+</script>
+
+</body>
+  </html>
