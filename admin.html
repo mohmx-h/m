@@ -315,6 +315,10 @@
         #09090b;
     }
   </style>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="modulepreload" href="./seed-data.js">
+<meta name="robots" content="noindex, nofollow">
 </head>
 
 <body>
@@ -2919,6 +2923,7 @@
 
   import {
     getFirestore,
+    initializeFirestore,
     collection,
     getDocs,
     addDoc,
@@ -2932,6 +2937,7 @@
 
 
   import * as SEED from "./seed-data.js";
+  import { createActivityLogger } from "./activity-logger.js";
   window.SEED = SEED;
 
   /* =====================================================
@@ -2969,8 +2975,9 @@
   const auth =
     getAuth(firebaseApp);
 
-  const db =
-    getFirestore(firebaseApp);
+  let db;
+    try { db = initializeFirestore(firebaseApp, { experimentalForceLongPolling: true }); }
+    catch (e) { db = getFirestore(firebaseApp); }
 
 
   /* =====================================================
@@ -3010,6 +3017,22 @@
     serverTimestamp
 
   };
+
+
+  /* =====================================================
+     ACTIVITY LOG (تسجيل كل العمليات في activityLogs)
+  ===================================================== */
+
+  const activity = createActivityLogger({
+    auth, db, addDoc, collection, serverTimestamp,
+    page: 'admin.html',
+    getAdminState: () => window.adminAlpine
+  });
+  window.activity = activity;
+  window.firebaseServices.setDoc = activity.wrapWrite('set', setDoc);
+  window.firebaseServices.addDoc = activity.wrapWrite('add', addDoc);
+  window.firebaseServices.updateDoc = activity.wrapWrite('update', updateDoc);
+  window.firebaseServices.deleteDoc = activity.wrapWrite('delete', deleteDoc);
 
 
   /* =====================================================
@@ -3170,16 +3193,16 @@ function adminApp() {
       seo: {
 
         title:
-          'محمد الحميقاني | صانع محتوى',
+          'محمد الحميقاني (mohomx) | صانع محتوى يمني',
 
         description:
-          'محمد الحميقاني، صانع محتوى يمني يقدم محتوى متنوعًا في مواقع التواصل الاجتماعي.',
+          'محمد الحميقاني (mohomx) صانع محتوى يمني على تيك توك وانستجرام ويوتيوب: فيديوهات عن تاريخ اليمن والثورات اليمنية وثورة 26 سبتمبر و14 أكتوبر، مع محتوى توعوي وقصص ملهمة مثل قصة إصابتي.',
 
         keywords:
-          'محمد الحميقاني, mohomx, صانع محتوى, اليمن',
+          'محمد الحميقاني, الحميقاني, محمد حميقاني, mohomx, محوم اكس, Mohammed Al-Humaiqani, Mohamed Alhumaiqani, صانع محتوى يمني, صناع المحتوى في اليمن, تيك توك يمني, يوتيوبر يمني, انستجرام يمني, اليمن, تاريخ اليمن, الثورات اليمنية, ثورة 26 سبتمبر, ثورة 14 أكتوبر, ابطال الثورة اليمنية, قصة اصابتي, توعية, القات, محتوى توعوي, محتوى تعليمي, فيديوهات يمنية',
 
         url:
-          'https://example.com'
+          'https://mohmx-h.github.io/m/'
 
       },
 
@@ -3593,24 +3616,24 @@ function adminApp() {
       this.loginLoading = true;
 
 
+      const attemptedEmail = this.loginForm.email.trim();
       try {
-
-        await window.firebaseServices
+        const cred = await window.firebaseServices
           .signInWithEmailAndPassword(
-
             window.firebaseServices.auth,
-
-            this.loginForm.email.trim(),
-
+            attemptedEmail,
             this.loginForm.password
-
           );
-
+        if (cred.user.uid === 'FC4QogHGgmgars0mbg9adE1Hx4N2') {
+          window.activity.log({ type: 'login', action: 'تسجيل دخول', details: 'تسجيل دخول إلى لوحة التحكم', status: 'success' });
+        } else {
+          await window.firebaseServices.signOut(window.firebaseServices.auth);
+          window.activity.log({ type: 'login_failed', action: 'محاولة دخول فاشلة', details: 'حساب غير مصرح له', status: 'failed', error: 'unauthorized-account', email: attemptedEmail, uid: null });
+        }
       }
-
       catch (error) {
-
         console.error(error);
+        window.activity.log({ type: 'login_failed', action: 'محاولة دخول فاشلة', details: 'فشل تسجيل الدخول إلى لوحة التحكم', status: 'failed', error: error && error.code, email: attemptedEmail, uid: null });
 
         if (
           error.code ===
@@ -3655,9 +3678,12 @@ function adminApp() {
     ================================================= */
 
     async logout() {
-
       try {
-
+        /* نسجّل الخروج قبل إنهاء الجلسة (نحتاج الصلاحية للكتابة) */
+        await Promise.race([
+          window.activity.log({ type: 'logout', action: 'تسجيل خروج', details: 'تسجيل خروج من لوحة التحكم', status: 'success' }),
+          new Promise(r => setTimeout(r, 2500))
+        ]);
         await window.firebaseServices.signOut(
           window.firebaseServices.auth
         );
@@ -3687,8 +3713,12 @@ function adminApp() {
 
       try {
 
-        await this.migrateIfNeeded();
-        await this.migrateSocialIcons();
+        if (localStorage.getItem('migDone_v2') !== '1') {
+          window.__activityMute = true;
+          try { await Promise.all([this.migrateIfNeeded(), this.migrateSocialIcons()]); }
+          finally { window.__activityMute = false; }
+          localStorage.setItem('migDone_v2', '1');
+        }
         const loaders = [
           ['أقسام الفيديوهات', () => this.loadCategories()],
           ['الزيارات', () => this.loadVisits()],
@@ -3769,10 +3799,12 @@ function adminApp() {
         if (target === 'social') this.socialForm.image = data;
         else if (target === 'review') this.reviewForm.image = data;
         else this.videoForm.image = data;
+        window.activity.log({ type: 'upload', action: 'رفع صورة', details: ({ video: 'صورة فيديو', review: 'صورة متابع', social: 'شعار أيقونة تواصل' }[target] || target) + ' — ' + Math.round(data.length / 1024) + ' KB (تُحفظ داخل Firestore)', status: 'success' });
         this.toast('تم اختيار الصورة');
       }
       catch (error) {
         console.error(error);
+        window.activity.log({ type: 'upload', action: 'رفع صورة', details: 'فشل تجهيز الصورة', status: 'failed', error: error && error.message });
         this.toast('تعذر تجهيز الصورة، جرّب صورة أخرى.');
       }
       event.target.value = '';
@@ -3808,12 +3840,10 @@ function adminApp() {
     },
     async toggleReview(review) {
       const f = window.firebaseServices;
-      try {
-        await f.updateDoc(f.doc(f.db, 'reviews', review.id), { visible: review.visible === false });
-        review.visible = review.visible === false;
-        this.toast(review.visible ? 'تم إظهار الرأي' : 'تم إخفاء الرأي');
-      }
-      catch (error) { console.error(error); this.toast('تعذر تحديث الرأي، حاول مرة أخرى.'); }
+      const nv = review.visible === false;
+      review.visible = nv;
+      try { await f.updateDoc(f.doc(f.db, 'reviews', review.id), { visible: nv }); this.toast(nv ? 'تم إظهار الرأي' : 'تم إخفاء الرأي'); }
+      catch (error) { console.error(error); review.visible = !nv; this.toast('تعذر تحديث الرأي، حاول مرة أخرى.'); }
     },
     /* =================================================
        STATS
@@ -3857,22 +3887,22 @@ function adminApp() {
     async moveVideo(idx, dir) {
       const j = idx + dir;
       if (idx < 0 || j < 0 || j >= this.videos.length || this.saving) return;
-      this.saving = true;
       const f = window.firebaseServices;
-      const list = [...this.videos];
+      const before = this.videos;
+      const list = [...before];
       [list[idx], list[j]] = [list[j], list[idx]];
+      const changed = [];
+      list.forEach((v, k) => { if (v.order !== k + 1) changed.push([v, k + 1]); });
+      this.videos = list.map((v, k) => ({ ...v, order: k + 1 }));   /* تحديث فوري للواجهة */
       try {
-        await Promise.all(list.map((v, k) => f.updateDoc(f.doc(f.db, 'videos', v.id), { order: k + 1 })));
-        list.forEach((v, k) => { v.order = k + 1; });
-        this.videos = list;
+        await Promise.all(changed.map(([v, o]) => f.updateDoc(f.doc(f.db, 'videos', v.id), { order: o })));
         this.toast('تم حفظ الترتيب');
       }
       catch (error) {
         console.error(error);
+        this.videos = before;
         this.toast('تعذر حفظ الترتيب، حاول مرة أخرى.');
-        await this.loadVideos();
       }
-      finally { this.saving = false; }
     },
     /* =================================================
        SOCIAL ICONS (collection: socialIcons)
@@ -3897,8 +3927,10 @@ function adminApp() {
     async _saveSocialItems(items) {
       const f = window.firebaseServices;
       const clean = JSON.parse(JSON.stringify(items)).map((it, k) => ({ ...it, order: k + 1 }));
-      await f.setDoc(this._socialDoc(), { items: clean, updatedAt: f.serverTimestamp() });
-      this.socialIcons = clean;
+      const before = this.socialIcons;
+      this.socialIcons = clean;   /* تحديث فوري للواجهة */
+      try { await f.setDoc(this._socialDoc(), { items: clean, updatedAt: f.serverTimestamp() }); }
+      catch (e) { this.socialIcons = before; throw e; }
     },
     resetSocialForm() {
       this.socialForm = { id: '', name: '', url: '', image: '', icon: '', cls: '', visible: true };
@@ -4015,36 +4047,32 @@ function adminApp() {
     },
     async toggleCategory(c) {
       const f = window.firebaseServices;
-      try {
-        await f.updateDoc(f.doc(f.db, 'videoCategories', c.id), { visible: c.visible === false });
-        c.visible = c.visible === false;
-        this.toast(c.visible ? 'تم إظهار القسم' : 'تم إخفاء القسم');
-      }
-      catch (error) { console.error(error); this.toast('تعذر تحديث القسم، حاول مرة أخرى.'); }
+      const nv = c.visible === false;
+      c.visible = nv;
+      try { await f.updateDoc(f.doc(f.db, 'videoCategories', c.id), { visible: nv }); this.toast(nv ? 'تم إظهار القسم' : 'تم إخفاء القسم'); }
+      catch (error) { console.error(error); c.visible = !nv; this.toast('تعذر تحديث القسم، حاول مرة أخرى.'); }
     },
     async moveCategory(idx, dir) {
       const j = idx + dir;
       if (j < 0 || j >= this.categories.length) return;
       const f = window.firebaseServices;
-      const list = [...this.categories];
+      const before = this.categories;
+      const list = [...before];
       [list[idx], list[j]] = [list[j], list[idx]];
-      try {
-        await Promise.all(list.map((c, k) => f.updateDoc(f.doc(f.db, 'videoCategories', c.id), { order: k + 1 })));
-        list.forEach((c, k) => { c.order = k + 1; });
-        this.categories = list;
-      }
-      catch (error) { console.error(error); this.toast('تعذر تغيير الترتيب، حاول مرة أخرى.'); }
+      const changed = [];
+      list.forEach((c, k) => { if (c.order !== k + 1) changed.push([c, k + 1]); });
+      this.categories = list.map((c, k) => ({ ...c, order: k + 1 }));
+      try { await Promise.all(changed.map(([c, o]) => f.updateDoc(f.doc(f.db, 'videoCategories', c.id), { order: o }))); }
+      catch (error) { console.error(error); this.categories = before; this.toast('تعذر تغيير الترتيب، حاول مرة أخرى.'); }
     },
     async deleteCategory(c) {
       const used = this.videos.filter(v => v.categoryId === c.id || (v.categoryIds || []).includes(c.id)).length;
       if (!confirm(`هل أنت متأكد من حذف القسم "${c.name}"؟` + (used ? `\nيرتبط به ${used} فيديو (لن تُحذف الفيديوهات).` : ''))) return;
       const f = window.firebaseServices;
-      try {
-        await f.deleteDoc(f.doc(f.db, 'videoCategories', c.id));
-        this.categories = this.categories.filter(x => x.id !== c.id);
-        this.toast('تم حذف القسم');
-      }
-      catch (error) { console.error(error); this.toast('تعذر حذف القسم، حاول مرة أخرى.'); }
+      const backup = this.categories;
+      this.categories = this.categories.filter(x => x.id !== c.id);
+      try { await f.deleteDoc(f.doc(f.db, 'videoCategories', c.id)); this.toast('تم حذف القسم'); }
+      catch (error) { console.error(error); this.categories = backup; this.toast('تعذر حذف القسم، حاول مرة أخرى.'); }
     },
     /* =================================================
        VIDEOS
@@ -4218,13 +4246,13 @@ function adminApp() {
         }
 
 
-        await this.loadVideos();
-
         this.videoModal = false;
 
         this.editingVideo = false;
 
         this.resetVideoForm();
+
+        this.loadVideos().catch(e => console.error('reload videos:', e));
 
       }
 
@@ -4331,27 +4359,10 @@ function adminApp() {
       }
 
 
+      const backup = this.videos;
+      this.videos = this.videos.filter(item => item.id !== video.id);
       try {
-
-        await window.firebaseServices.deleteDoc(
-
-          window.firebaseServices.doc(
-
-            window.firebaseServices.db,
-
-            'videos',
-
-            video.id
-
-          )
-
-        );
-
-
-        this.videos =
-          this.videos.filter(
-            item => item.id !== video.id
-          );
+        await window.firebaseServices.deleteDoc(window.firebaseServices.doc(window.firebaseServices.db, 'videos', video.id));
 
 
         this.toast(
@@ -4364,6 +4375,7 @@ function adminApp() {
 
         console.error(error);
 
+        this.videos = backup;
         this.toast(
           'تعذر حذف الفيديو'
         );
@@ -4419,27 +4431,10 @@ function adminApp() {
       }
 
 
+      const backup = this.reviews;
+      this.reviews = this.reviews.filter(item => item.id !== review.id);
       try {
-
-        await window.firebaseServices.deleteDoc(
-
-          window.firebaseServices.doc(
-
-            window.firebaseServices.db,
-
-            'reviews',
-
-            review.id
-
-          )
-
-        );
-
-
-        this.reviews =
-          this.reviews.filter(
-            item => item.id !== review.id
-          );
+        await window.firebaseServices.deleteDoc(window.firebaseServices.doc(window.firebaseServices.db, 'reviews', review.id));
 
 
         this.toast(
@@ -4452,6 +4447,7 @@ function adminApp() {
 
         console.error(error);
 
+        this.reviews = backup;
         this.toast(
           'تعذر حذف الرأي'
         );
@@ -4504,25 +4500,29 @@ function adminApp() {
 
     async saveSiteSection(section) {
 
+      if (this.saving) return;
+      this.saving = true;
+      this.toast('جاري الحفظ...');
       const f = window.firebaseServices;
       const ref = f.doc(f.db, 'settings', 'site');
       try {
         const value = JSON.parse(JSON.stringify(this.site[section] || {}));
         await f.setDoc(ref, { [section]: value, updatedAt: f.serverTimestamp() }, { merge: true });
-        /* تحقق فعلي: قراءة المستند من الخادم والتأكد أن القيمة محفوظة */
-        const check = await f.getDoc(ref);
-        const saved = check.exists() ? check.data()[section] : undefined;
-        if (JSON.stringify(saved) !== JSON.stringify(value)) {
-          console.error('Save verification mismatch:', section, saved, value);
-          this.toast('لم يتم التحقق من حفظ التغييرات في Firebase، حاول مرة أخرى.');
-          return;
-        }
         this.toast('تم حفظ التغييرات في Firebase');
+        /* تحقق في الخلفية بدون تأخير الواجهة */
+        f.getDoc(ref).then(check => {
+          const saved = check.exists() ? check.data()[section] : undefined;
+          if (JSON.stringify(saved) !== JSON.stringify(value)) {
+            console.error('Save verification mismatch:', section, saved, value);
+            this.toast('تنبيه: لم يتطابق المحفوظ مع المُدخل، أعد الحفظ.');
+          }
+        }).catch(e => console.error('verify failed:', e));
       }
       catch (error) {
         console.error('saveSiteSection [' + section + ']:', error);
         this.toast('تعذر حفظ الإعدادات: ' + ((error && error.code) || 'خطأ غير معروف'));
       }
+      finally { this.saving = false; }
 
     },
 
