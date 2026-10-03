@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mohmx-h.github.io/m/sitemap.xml
