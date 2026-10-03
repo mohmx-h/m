@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl" x-data="projects()" :class="{'dark':dark}" x-init="init()" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Projects — Eliott</title>
+
+  <style id="ld-style">
+    html.ld-on::after{content:"";position:fixed;inset:0;z-index:2147483646;background:var(--ld-bg,#fff)}
+    html.ld-on::before{content:"";position:fixed;z-index:2147483647;top:50%;left:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border:3px solid rgba(128,128,128,.25);border-top-color:var(--accent,#FF6B2B);border-radius:50%;animation:ldspin .8s linear infinite}
+    @keyframes ldspin{to{transform:rotate(360deg)}}
+  </style>
+  <script>
+    /* شاشة تحميل قصيرة تظهر فقط في أول زيارة (بدون كاش) وتختفي فور وصول البيانات */
+    (function () {
+      try {
+        var d = document.documentElement, t = localStorage.getItem("theme");
+        var dark = t === "dark" || (!t && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+        d.style.setProperty("--ld-bg", dark ? "#09090b" : "#ffffff");
+        d.classList.add("ld-on");
+        setTimeout(function () { d.classList.remove("ld-on"); }, 4000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="./site-data.js">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+<style>
+  .fa-brands,
+  .fa-instagram {
+    font-family: "Font Awesome 6 Brands" !important;
+    font-weight: 400 !important;
+    font-style: normal !important;
+    line-height: 1;
+  }
+</style>
+  <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&display=swap" rel="stylesheet"/>
+
+  <script>
+    tailwind.config={
+      darkMode:'class',
+      theme:{
+        extend:{
+          fontFamily:{
+            display:['PT Sans','sans-serif'],
+            body:['DM Sans','sans-serif']
+          },
+          colors:{
+            accent:'rgb(var(--accent-rgb, 255 107 43) / <alpha-value>)',
+            'accent-light':'#FF8F5C'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *,*::before,*::after{
+      box-sizing:border-box;
+    }
+
+    html{
+      font-family:'DM Sans',sans-serif;
+    }
+
+    h1,h2,h3,h4,h5,h6{
+      font-family:'PT Sans',sans-serif;
+    }
+
+    .reveal{
+      opacity:0;
+      transform:translateY(22px);
+      transition:
+        opacity .55s cubic-bezier(.4,0,.2,1),
+        transform .55s cubic-bezier(.4,0,.2,1);
+    }
+
+    .reveal.visible{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .nav-link{
+      position:relative;
+    }
+
+    .nav-link::after{
+      content:'';
+      position:absolute;
+      bottom:-2px;
+      left:0;
+      width:0;
+      height:1.5px;
+      background:currentColor;
+      transition:width .25s cubic-bezier(.4,0,.2,1);
+    }
+
+    .nav-link:hover::after{
+      width:100%;
+    }
+
+    ::-webkit-scrollbar{
+      width:5px;
+    }
+
+    ::-webkit-scrollbar-track{
+      background:transparent;
+    }
+
+    ::-webkit-scrollbar-thumb{
+      background:var(--accent, #FF6B2B);
+      border-radius:99px;
+    }
+
+    body{
+      transition:background-color .3s,color .3s;
+    }
+
+    body::before{
+      content:'';
+      position:fixed;
+      inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events:none;
+      z-index:0;
+      opacity:.4;
+    }
+
+    .btn-primary{
+      position:relative;
+      overflow:hidden;
+    }
+
+    .btn-primary::after{
+      content:'';
+      position:absolute;
+      top:0;
+      left:-100%;
+      width:60%;
+      height:100%;
+      background:rgba(255,255,255,.18);
+      transform:skewX(-20deg);
+      transition:left .4s cubic-bezier(.4,0,.2,1);
+    }
+
+    .btn-primary:hover::after{
+      left:160%;
+    }
+
+    [x-cloak]{
+      display:none!important;
+    }
+
+    .photo-frame{
+      position:relative;
+      overflow:hidden;
+      background:#e4e4e7;
+    }
+
+    .photo-frame img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .project-card{
+      transition:
+        transform .3s cubic-bezier(.4,0,.2,1),
+        border-color .2s;
+    }
+
+    .project-card:hover{
+      transform:translateY(-4px);
+    }
+  </style>
+</head>
+
+<body class="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-body antialiased">
+
+  <header
+    class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+    :class="scrolled?'bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md shadow-sm shadow-black/5':'bg-transparent'"
+  >
+
+    <nav class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+
+      <a href="index.html" class="font-display font-bold text-xl tracking-tight z-10">
+        <span class="text-zinc-900 dark:text-white">الحميـ</span><span class="text-accent">ـقاني</span>
+      </a>
+
+      <ul class="hidden md:flex items-center gap-8 text-sm font-medium">
+        
+        <li>
+          <a href="index.html"
+             class="nav-link text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+            الرجوع للصفحة الرئيسية
+          </a>
+        </li>
+      </ul>
+
+      <div class="flex items-center gap-3">
+
+        <button
+          @click="dark=!dark;localStorage.setItem('theme',dark?'dark':'light')"
+          class="w-9 h-9 flex items-center justify-center rounded-full border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          :aria-label="dark?'Light mode':'Dark mode'"
+        >
+          <svg
+            x-show="!dark"
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
+            />
+          </svg>
+
+          <svg
+            x-show="dark"
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"
+            />
+          </svg>
+        </button>
+
+        <a
+          href="index.html#contact"
+          class="hidden md:inline-flex items-center gap-2 btn-primary bg-accent text-white text-sm font-medium px-5 py-2 rounded-full hover:bg-accent-light transition-colors"
+        >
+          Hire me &rarr;
+        </a>
+
+        <button
+          @click="mobileMenu=!mobileMenu"
+          class="md:hidden w-9 h-9 flex items-center justify-center rounded-full border border-zinc-200 dark:border-zinc-800"
+          aria-label="Toggle menu"
+        >
+          <svg
+            x-show="!mobileMenu"
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+
+          <svg
+            x-show="mobileMenu"
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+
+      </div>
+    </nav>
+
+    <div
+      x-show="mobileMenu"
+      x-cloak
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 -translate-y-2"
+      x-transition:enter-end="opacity-100 translate-y-0"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="opacity-100 translate-y-0"
+      x-transition:leave-end="opacity-0 -translate-y-2"
+      class="md:hidden bg-white dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-900"
+    >
+
+      <ul class="flex flex-col px-6 py-4 gap-4 text-sm font-medium">
+
+      
+        <li>
+          <a
+            href="index.html"
+            @click="mobileMenu=false"
+            class="block text-zinc-700 dark:text-zinc-300"
+          >
+            الرجوع للصفحة الرئيسية
+          </a>
+        </li>
+
+      </ul>
+    </div>
+
+  </header>
+
+
+  <main>
+
+    <section class="pt-36 pb-12 relative overflow-hidden">
+
+      <div class="absolute top-0 right-0 w-80 h-80 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="max-w-6xl mx-auto px-6 relative z-10">
+
+        <p class="reveal text-xs font-medium text-accent tracking-widest uppercase mb-3">
+          المحتوى الذي اقدمه
+        </p>
+
+        <h1 class="reveal font-display font-bold text-5xl md:text-6xl text-zinc-900 dark:text-white leading-tight mb-4">
+          محتواي
+        </h1>
+
+        <p class="reveal text-lg text-zinc-500 dark:text-zinc-400 max-w-xl leading-relaxed mb-8">
+          يمكنك استطلاع ومشاهدة فيديوهاتنا عبر هذه الصفحه
+        </p>
+
+        <div class="reveal flex flex-wrap gap-2">
+
+          <template x-for="f in filterOptions" :key="f.value">
+
+            <button
+              @click="filter = f.value"
+              :class="filter === f.value ? 'bg-accent text-white border-accent' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-accent'"
+              class="text-sm px-4 py-1.5 rounded-full border transition-colors"
+              x-text="f.label"
+            ></button>
+
+          </template>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <section class="pb-24">
+
+      <div class="max-w-6xl mx-auto px-6">
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          <template x-for="p in allProjects" :key="p.id">
+
+            <div
+              x-show="filter === 'all' || (p.cats || [p.category]).includes(filter)"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+              x-transition:leave="transition ease-in duration-200"
+              x-transition:leave-start="opacity-100 scale-100"
+              x-transition:leave-end="opacity-0 scale-95"
+            >
+
+              <article class="project-card group h-full rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-accent transition-colors">
+
+                <!-- الصورة + أيقونة Instagram -->
+                <a
+                  :href="p.url"
+                  class="block photo-frame w-full aspect-[2/3]"
+                >
+
+                  <img
+                    :src="p.img"
+                    :alt="p.title"
+                    loading="lazy"
+                  />
+
+                  <div
+  class="absolute bottom-4 left-4 w-11 h-11 rounded-xl flex items-center justify-center shadow-lg z-10"
+  :class="{
+    'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600': p.icon === 'instagram',
+    'bg-red-600': p.icon === 'youtube',
+    'bg-black': p.icon === 'tiktok'
+  }"
+>
+  <i
+    :class="{
+      'fa-instagram': p.icon === 'instagram',
+      'fa-youtube': p.icon === 'youtube',
+      'fa-tiktok': p.icon === 'tiktok'
+    }"
+    class="fa-brands text-2xl text-white"
+  ></i>
+</div>
+                </a>
+
+
+                <div class="p-6">
+
+                  <div class="flex flex-wrap gap-2 mb-3">
+
+                    <template x-for="tag in p.tags" :key="tag">
+
+                      <span
+                        class="text-xs px-2.5 py-1 rounded-full"
+                        :class="tag === p.categoryLabel ? 'bg-orange-50 dark:bg-zinc-800 text-accent border border-orange-200 dark:border-zinc-700' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                        x-text="tag"
+                      ></span>
+
+                    </template>
+
+                  </div>
+
+
+                  <a :href="p.url">
+
+                    <h3
+                      class="font-display font-bold text-lg text-zinc-900 dark:text-white mb-2 group-hover:text-accent transition-colors"
+                      x-text="p.title"
+                    ></h3>
+
+                  </a>
+
+
+                  <p
+                    class="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4"
+                    x-text="p.desc"
+                  ></p>
+
+
+                  <div class="flex items-center justify-between">
+
+                    <a
+                      :href="p.url"
+                      class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-900 dark:text-white nav-link"
+                    >
+                      مشاهدة الفيديو 
+                    </a>
+
+                    <span
+                      class="text-xs text-zinc-400"
+                      x-text="p.year"
+                    ></span>
+
+                  </div>
+
+                </div>
+
+              </article>
+
+            </div>
+
+          </template>
+
+        </div>
+
+
+        <div
+          x-show="visibleCount === 0"
+          x-cloak
+          class="text-center py-20"
+        >
+          <p class="text-zinc-400 text-sm">
+            No projects in this category yet.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+
+   
+  </main>
+
+
+  <footer class="border-t border-zinc-100 dark:border-zinc-900">
+
+    <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+      <p class="text-sm text-zinc-400">
+        جميع الحقوق محفوظه لصالح محمد الحميقاني <span id="year"></span> 
+      </p>
+
+      <p class="text-xs text-zinc-500">
+        تم برمجة وتصميم الموقع بواسطه الحميقاني @vw.hqy
+      </p>
+
+    </div>
+
+  </footer>
+
+
+  <script>
+
+    function projects() {
+
+      return {
+
+        dark: false,
+        scrolled: false,
+        mobileMenu: false,
+        filter: 'all',
+
+        filterOptions: [
+          { value: 'all',       label: 'الكل ( ١٤ )' },
+          { value: 'ph',      label: 'محتوى متنوع' },
+          { value: 'th',   label: 'الثورات اليمنيه' },
+          { value: 'g',    label: 'قصة اصابتي' },
+          { value: 't', label: 'توعية' },
+        ],
+
+
+        allProjects: [
+
+          {
+            id:1,
+            title:'ثورة الـ ٢٦ من سبتمبر',
+            category:'th',
+            categoryLabel:'الثورات اليمنية',
+            tags:['الثورات اليمنية','تعليم','ابرز الشهداء'],
+            year:'2026',
+            desc:'في هذا الفيديو نسلّط الضوء على أبرز شهداء ثورة 26 سبتمبر، ونتذكر أسماء رجال قدّموا تضحيات كبيرة في سبيل الثورة والجمهورية، ونتعرف على جانب من قصصهم ومواقفهم ودورهم في تلك المرحلة المهمة من تاريخ اليمن. نستعرض محطات من حياتهم وما قدّموه، ونستذكر تضحياتهم التي بقيت حاضرة في ذاكرة اليمنيين، مع التوقف عند بعض الأحداث والمواقف التي ارتبطت بهم وبثورة 26 سبتمبر. هذا الفيديو محاولة للتعريف بهم وإحياء ذكراهم، حتى تبقى قصصهم وتضحياتهم معروفة للأجيال القادمة.',
+            img:'./img/m1.jpg',
+            icon: 'tiktok',
+            url:'https://www.tiktok.com/@mohomx/video/7683553010122771732'
+           
+          },
+
+
+          {
+            id:2,
+            title:'ماذا أخذ القات من اليمنيين ؟',
+            category:'t',
+            categoryLabel:'توعية',
+tags:['توعية','آثار القات على الفرد والمجتمع','نصائح'],
+            year:'2026',
+            desc:'في هذا الفيديو نتحدث عن تأثير القات على حياة اليمنيين، ونتوقف عند بعض الجوانب التي ارتبطت بانتشاره في المجتمع، من الوقت والمال إلى العادات اليومية والعلاقات الاجتماعية. نستعرض كيف أصبح القات جزءًا من حياة الكثير من الناس، وما الذي قد يخسره الفرد والمجتمع بسببه، مع طرح الموضوع بطريقة بسيطة ومباشرة تساعد على التفكير في العادات التي نمارسها وتأثيرها على حياتنا ومستقبلنا.',
+            img:'./img/m3.jpg',
+            icon: 'tiktok',
+            url:'https://www.tiktok.com/@mohomx/video/7682048575198579989'
+          },
+
+
+          {
+            id:3,
+            title:'ابطال ثورة 14 اكتوبر',
+            category:'th',
+            categoryLabel:'الثورات اليمنية',
+            tags:['الثورات اليمنية','ثقافة'],
+            year:'2026',
+            desc:'في هذا الفيديو نسلّط الضوء على أبرز أبطال وقيادات ثورة 14 أكتوبر، ونتعرّف على رجال كان لهم دور بارز في مقاومة الاستعمار البريطاني والمشاركة في مسيرة الثورة. نستعرض جانبًا من قصصهم ومواقفهم، ونتوقف عند بعض المحطات المهمة التي ارتبطت بهم وبالثورة، ونتعرّف على تضحياتهم والجهود التي بذلوها في سبيل التحرر والاستقلال. هذا الفيديو محاولة للتعريف بأبرز الشخصيات التي ارتبط اسمها بثورة 14 أكتوبر، واستحضار صفحات من تاريخ اليمن الحديث للأجيال القادمة.',
+            img:'./img/m2.jpg',
+            icon: 'youtube',
+           url:'https://youtube.com/shorts/WchZAp_O6rM?si=N312XzvcluGHqDiT'
+          },
+
+
+          {
+            id:4,
+            title:'كلمة للشعب اليمني بمناسبة ثورة 26 سبتمبر',
+            category:'th',
+            categoryLabel:'الثورات اليمنية',
+            tags:['الثورات اليمنية','كلمة للشعب'],
+            year:'2026',
+            desc:'كلمة إلى الشعب اليمني بمناسبة الذكرى الـ٦٤ لثورة ٢٦ سبتمبر المجيدة، نستحضر فيها معاني الحرية والجمهورية، ونتذكر تضحيات الأجيال التي صنعت هذه المناسبة، مع رسالة للشعب اليمني تؤكد أهمية الحفاظ على قيم سبتمبر واستحضار دروس التاريخ، والأمل بمستقبل أفضل لليمن وأبنائه.',
+            img:'./img/klma.jpg',
+            icon: 'instagram',
+            url:'https://www.instagram.com/reel/DdwIJ0nqctI/'
+          },
+
+
+          {
+            id:5,
+            title:'صحح معلوماتك عن اليمنيين',
+            category:'t',
+            categoryLabel:'توعية',
+            tags:['توعية','تصحيح معتقدات','معلومات زائفه'],
+            year:'2026',
+            desc:'صحّح معلوماتك عن اليمنيين، وتعرّف على حقائق ومعلومات قد تكون غائبة عنك حول تاريخ اليمن وشعبه وثقافته وهويته. محتوى يسلّط الضوء على جوانب مهمة من اليمن، ويصحح بعض المفاهيم والمعلومات المتداولة بطريقة مبسطة ومباشرة.',
+            img:'./img/shh.jpg',
+            icon: 'youtube',
+            url:'https://youtube.com/shorts/vATDcOdbpC4?si=cGs6QYSP9xSJ6qtZ'
+          },
+
+
+          {
+            id:6,
+            title:'خرافات وعادات سيئة في اليمن',
+            category:'t',
+            categoryLabel:'توعية',
+            tags:['توعية','عادات سيئة'],
+            year:'2026',
+            desc:'خرافات وعادات سيئة في اليمن، نسلّط الضوء على بعض المعتقدات والعادات الاجتماعية التي انتشرت في بعض المناطق عبر الزمن، ونناقشها بطريقة بسيطة وموضوعية، مع توضيح ما يستند إلى حقيقة وما هو مجرد معتقد متوارث، بهدف زيادة الوعي وتشجيع التفكير والنقاش حول بعض الممارسات التي تحتاج إلى مراجعة.',
+            img:'./img/twaeh.jpg',
+            icon: 'tiktok',
+            url:'https://www.tiktok.com/@mohomx/video/7676861176206069013'
+          },
+
+
+
+          {
+            id:7,
+            title:'اغلى المحافظات اليمنيه بالمهور',
+            category:'ph',
+            categoryLabel:'محتوى متنوع',
+            tags:['محتوى متنوع','اغلى المهور','اليمن'],
+            year:'2026',
+            desc:'أغلى المحافظات اليمنية بالمهور، نتعرّف على اختلاف عادات الزواج وتكاليف المهور من منطقة إلى أخرى، ونستعرض بعض الحالات والمبادرات المحلية التي تكشف تفاوت قيمة المهر بين المحافظات والمناطق اليمنية، مع التوقف عند أسباب ارتفاع المهور وتأثيرها على الشباب والزواج.',
+            img:'./img/1.jpg',
+            icon: 'youtube',
+            
+            url:'https://youtube.com/shorts/pBs7dHAqJcU?si=oUdvxIvHrF-RT3Gv'
+          },
+
+
+          {
+            id:8,
+            title:'أشهر المسلسلات اليمنية',
+            category:'ph',
+            categoryLabel:'محتوى متنوع',
+            tags:['محتوى متنوع','مسلسلات يمنيه'],
+            year:'2026',
+            desc:'أشهر المسلسلات اليمنية التي تركت بصمة في ذاكرة المشاهد اليمني، نستعرض فيها أبرز الأعمال التي حققت حضورًا واسعًا، وتنوّعت بين الكوميديا والدراما والأعمال الاجتماعية والتراثية، مع التعرف على بعض الشخصيات والمواقف التي جعلت هذه المسلسلات حاضرة في ذاكرة الجمهور حتى اليوم.',
+            img:'./img/2.jpg',
+            icon: 'instagram',
+            url:'https://www.instagram.com/reel/DbdmwufqnuN/?stkn=MXN2N2VjbXZsb3hocg=='
+          },
+          
+           {
+            id:9,
+            title:'رواتب الموظفين اليمنيين',
+            category:'ph',
+            categoryLabel:'محتوى متنوع',
+            tags:['محتوى متنوع','رواتب'],
+            year:'2026',
+            desc:'رواتب الموظفين اليمنيين، نستعرض واقع الأجور في اليمن والفروقات بين الوظائف والقطاعات، مع التعرف على متوسطات الرواتب وبعض الأمثلة من الوظائف الحكومية والخاصة، وكيف أثرت الظروف الاقتصادية وارتفاع الأسعار وتراجع القوة الشرائية للعملة على دخل الموظف اليمني ومعيشته. وتشير البيانات الرسمية إلى تفاوت كبير في الدخول بحسب القطاع والوظيفة، بينما شهد عام 2026 إجراءات لزيادة رواتب موظفي الدولة في مناطق الحكومة المعترف بها دوليًا.',
+            img:'./img/4.jpg',
+            icon: 'youtube',
+            url:'https://youtube.com/shorts/v2K-XVNBQhY?si=X4N1UQQ0TMF45r8b'
+          },
+ {
+            id:10,
+            title:'اقوى الرتب العسكرية في اليمن',
+            category:'ph',
+            categoryLabel:'محتوى متنوع',
+            tags:['محتوى متنوع','رتب عسكرية'],
+            year:'2026',
+            desc:'من الملازم إلى المشير… تعرّف على تسلسل الرتب العسكرية في اليمن، وما تحمله كل رتبة من مسؤوليات ومهام ومكانة داخل المؤسسة العسكرية. نستعرض أبرز الرتب العسكرية وترتيبها من الأدنى إلى الأعلى، ونتعرف على الرموز والشارات التي تميّز كل رتبة، في جولة سريعة تكشف لك عالم الرتب العسكرية اليمنية بطريقة مبسطة وممتعة.',
+            img:'./img/5.jpg',
+            icon: 'tiktok',
+            url:'https://www.tiktok.com/@mohomx/video/7677610012818328853'
+          },
+ {
+            id:11,
+            title:'كم مرة فاز المنتخب اليمني',
+            category:'ph',
+            categoryLabel:'محتوى متنوع',
+            tags:['محتوى متنوع','المنتخب اليمني','كرة القدم'],
+            year:'2026',
+            desc:'أشهر المسلسلات اليمنية التي تركت بصمة في ذاكرة المشاهد اليمني، نستعرض فيها أبرز الأعمال التي حققت حضورًا واسعًا، وتنوّعت بين الكوميديا والدراما والأعمال الاجتماعية والتراثية، مع التعرف على بعض الشخصيات والمواقف التي جعلت هذه المسلسلات حاضرة في ذاكرة الجمهور حتى اليوم.',
+            img:'./img/6.jpg',
+            icon: 'instagram',
+            url:'https://www.instagram.com/reel/DdtvvrdKlHE/?stkn=MWo0NHVtdjd6c2xuOQ=='
+          },
+          
+          {
+            id:12,
+            title:'قصتي من يوم الاصابة حتى اليوم',
+            category:'g',
+            categoryLabel:'قصة اصابتي',
+            tags:['قصة اصابتي','المقاومه الشعبية'],
+            year:'2026',
+            desc:'أروي في هذا الفيديو قصتي منذ يوم الإصابة، وما مررت به من أحداث وتحديات خلال تلك الفترة، وصولًا إلى اليوم. أحكي تفاصيل التجربة كما عشتها، من لحظة الإصابة وما تبعها من مراحل، إلى التغيّرات التي مررت بها والدروس التي تركتها هذه الرحلة في حياتي.',
+            img:'./img/8.jpg',
+            icon: 'tiktok',
+            url:'https://www.tiktok.com/@mohomx/video/7686514387988827413'
+          },
+          
+              {
+            id:13,
+            title:'قصتي من يوم الاصابة حتى اليوم ( كاملة )',
+            category:'g',
+            categoryLabel:'قصة اصابتي',
+            tags:['قصة اصابتي','المقاومه الشعبية'],
+            year:'2026',
+            desc:'أروي في هذا الفيديو قصتي منذ يوم الإصابة، وما مررت به من أحداث وتحديات خلال تلك الفترة، وصولًا إلى اليوم. أحكي تفاصيل التجربة كما عشتها، من لحظة الإصابة وما تبعها من مراحل، إلى التغيّرات التي مررت بها والدروس التي تركتها هذه الرحلة في حياتي.',
+            img:'./img/9.jpg',
+            icon: 'tiktok',
+            url:'https://www.tiktok.com/@mohomx/video/7686888240611478805'
+          },
+          
+          {
+            id:14,
+            title:'اجمل الشواطئ في اليمن',
+            category:'ph',
+            categoryLabel:'محتوى متنوع',
+            tags:['محتوى متنوع','شواطئ يمنية'],
+            year:'2026',
+            desc:'اكتشف أجمل الشواطئ في اليمن، من السواحل الهادئة ذات الرمال الذهبية إلى الشواطئ والجزر التي تتميز بمياهها الصافية وطبيعتها الساحرة. نستعرض مجموعة من الوجهات الساحلية المميزة في مختلف مناطق اليمن، ونتعرّف على ما يميز كل شاطئ وما يجعله من الأماكن التي تستحق الاكتشاف.',
+            img:'./img/3.jpg',
+            icon: 'tiktok',
+            url:'https://www.tiktok.com/@mohomx/video/7670934687480565013'
+          }
+
+        ],
+
+
+        get visibleCount() {
+
+          if (this.filter === 'all')
+            return this.allProjects.length;
+
+          return this.allProjects.filter(
+            p => (p.cats || [p.category]).includes(this.filter)
+          ).length;
+
+        },
+
+
+        /* تطبيق بيانات Firestore على نفس القوالب الحالية (البيانات المكتوبة أعلاه تبقى كـ Fallback) */
+        applyRemote(d) {
+          try {
+            const names = {};
+            (d.categories || []).forEach(c => { names[c.id] = c; });
+            const list = (d.videos || [])
+              .filter(v => v.visible !== false && v.showOnProjects !== false && !(v.showOnProjects === undefined && v.showOnHome === true))
+              .sort((a, b) => (a.order || 0) - (b.order || 0))
+              .map(v => {
+                const ids = [v.categoryId, ...(v.categoryIds || [])].filter(Boolean);
+                const labels = ids.map(i => names[i] && names[i].visible !== false ? names[i].name : null).filter(Boolean);
+                return {
+                  id: v.id, title: v.title || '', category: v.categoryId || '', cats: ids,
+                  categoryLabel: labels[0] || v.category || '', tags: [...new Set([...(labels.length ? labels : (v.category ? [v.category] : [])), ...(Array.isArray(v.tags) ? v.tags : [])])],
+                  year: v.year || '', desc: v.description || '', img: (v.image || '').replace(/^\.\.\//, './'),
+                  icon: String(v.platform || '').toLowerCase(), url: v.url || ''
+                };
+              });
+            if (!list.length) return;
+            const used = new Set(); list.forEach(p => p.cats.forEach(c => used.add(c)));
+            const opts = (d.categories || [])
+              .filter(c => c.visible !== false && used.has(c.id))
+              .sort((a, b) => (a.order || 0) - (b.order || 0))
+              .map(c => ({ value: c.id, label: c.name }));
+            this.allProjects = list;
+            this.filterOptions = [{ value: 'all', label: 'الكل ( ' + list.length + ' )' }, ...opts];
+            this.filter = 'all';
+          } catch (error) {
+            console.error('applyRemote error:', error);
+          }
+        },
+
+
+        init() {
+
+          window.addEventListener('site-data', e => this.applyRemote(e.detail));
+          if (window.__siteData) this.applyRemote(window.__siteData);
+
+          this.dark =
+            localStorage.getItem('theme') === 'dark'
+            ||
+            (
+              !localStorage.getItem('theme')
+              &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches
+            );
+
+
+          window.addEventListener(
+            'scroll',
+            () => {
+              this.scrolled = window.scrollY > 20;
+            },
+            { passive:true }
+          );
+
+
+          this.$nextTick(() => {
+
+            const obs = new IntersectionObserver(
+              entries => {
+
+                entries.forEach(e => {
+
+                  if (e.isIntersecting) {
+
+                    e.target.classList.add('visible');
+
+                    obs.unobserve(e.target);
+
+                  }
+
+                });
+
+              },
+              {
+                threshold:0.08,
+                rootMargin:'0px 0px -30px 0px'
+              }
+            );
+
+
+            document
+              .querySelectorAll('.reveal')
+              .forEach(el => obs.observe(el));
+
+          });
+
+        }
+
+      }
+
+    }
+
+
+    document.getElementById('year').textContent =
+      new Date().getFullYear();
+
+  </script>
+
+
+  <link rel="stylesheet" href="style.css">
+
+  <script type="module">
+    import { loadSiteData, loadSiteSettings, readCache, applyAccent, applySEO, trackVisit } from "./site-data.js";
+    const done = () => document.documentElement.classList.remove('ld-on');
+    const sig = o => { try { const c = o ? { ...o } : o; if (c) delete c.source; return JSON.stringify(c); } catch (e) { return ''; } };
+    const push = d => { window.__siteData = d; window.dispatchEvent(new CustomEvent('site-data', { detail: d })); };
+    const applySet = s => { if (s && s.site) { applyAccent(s.site.design && s.site.design.accent); applySEO(s.site.seo); } };
+    const cache = readCache();
+    /* آخر بيانات محفوظة تُعرض فورًا (الصفحة مغطاة بشاشة التحميل حتى تُطبَّق) ثم تُحدَّث من Firestore */
+    applySet(cache.settings);
+    if (cache.data) { push(cache.data); requestAnimationFrame(() => requestAnimationFrame(done)); }
+    loadSiteSettings().then(s => { if (!cache.settings || sig(s) !== sig(cache.settings)) applySet(s); }).catch(e => console.error(e));
+    loadSiteData().then(d => { if (!cache.data || sig(d) !== sig(cache.data)) push(d); }).catch(e => console.error(e)).finally(done);
+    trackVisit();
+  </script>
+
+</body>
+</html>
