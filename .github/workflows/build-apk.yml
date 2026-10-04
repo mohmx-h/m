@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Mohomx APK Builder
 
 on:
   workflow_dispatch:
@@ -7,8 +7,12 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     steps:
+      - name: Workflow version check (v3)
+        run: echo "mohomx-apk-builder v3"
+
       - uses: actions/checkout@v4
 
       - name: Create the Android project
@@ -108,7 +112,7 @@ jobs:
 
           public class MainActivity extends AppCompatActivity {
 
-              /* false = الملفات داخل التطبيق (تتحدث عند بناء نسخة جديدة) | true = يفتح الموقع المنشور مباشرة (يتحدث تلقائيًا) */
+              /* false = files bundled inside the app (updated when a new APK is built) | true = opens the published site directly (always up to date) */
               private static final boolean USE_LIVE_SITE = false;
 
               private static final String LIVE_HOST = "mohmx-h.github.io";
@@ -128,7 +132,7 @@ jobs:
                   web = new WebView(this);
                   setContentView(web);
 
-                  // اختيار الصور من الجهاز (حقول رفع الملفات في اللوحة)
+                  // image picker for file inputs in the panel
                   fileLauncher = registerForActivityResult(
                           new ActivityResultContracts.StartActivityForResult(),
                           result -> {
@@ -180,14 +184,14 @@ jobs:
                           return true;
                       }
 
-                      // نوافذ confirm() و alert() في اللوحة (تأكيد الحذف وغيره) لا تعمل في WebView بدون هذا
+                      // confirm() and alert() dialogs (delete confirmations) do not work in a WebView without these
                       @Override
                       public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
                           if (isFinishing()) { result.cancel(); return true; }
                           new AlertDialog.Builder(MainActivity.this)
                                   .setMessage(message)
-                                  .setPositiveButton("موافق", (d, w) -> result.confirm())
-                                  .setNegativeButton("إلغاء", (d, w) -> result.cancel())
+                                  .setPositiveButton(R.string.btn_ok, (d, w) -> result.confirm())
+                                  .setNegativeButton(R.string.btn_cancel, (d, w) -> result.cancel())
                                   .setOnCancelListener(d -> result.cancel())
                                   .show();
                           return true;
@@ -198,7 +202,7 @@ jobs:
                           if (isFinishing()) { result.confirm(); return true; }
                           new AlertDialog.Builder(MainActivity.this)
                                   .setMessage(message)
-                                  .setPositiveButton("حسنًا", (d, w) -> result.confirm())
+                                  .setPositiveButton(R.string.btn_ok_alert, (d, w) -> result.confirm())
                                   .setOnCancelListener(d -> result.confirm())
                                   .show();
                           return true;
@@ -236,8 +240,8 @@ jobs:
                   String host = u.getHost() == null ? "" : u.getHost();
                   if (host.equals(APP_HOST)) {
                       String p = u.getPath() == null ? "" : u.getPath();
-                      if (p.startsWith("/assets/web/")) return false;          // صفحة داخل التطبيق
-                      // روابط مثل ../index.html تخرج من مجلد التطبيق: نفتح الموقع المنشور في المتصفح
+                      if (p.startsWith("/assets/web/")) return false;          // page inside the app
+                      // links like ../index.html leave the app folder: open the published site in the browser
                       String rest = p.startsWith("/assets/") ? p.substring("/assets/".length()) : "";
                       openExternal(Uri.parse(LIVE_BASE + rest));
                       return true;
@@ -289,6 +293,9 @@ jobs:
               <string name="app_name">لوحة التحكم</string>
               <string name="sc_log">سجل النشاط</string>
               <string name="sc_log_long">فتح سجل النشاط</string>
+              <string name="btn_ok">موافق</string>
+              <string name="btn_cancel">إلغاء</string>
+              <string name="btn_ok_alert">حسنًا</string>
           </resources>
           EOF_FILE
           mkdir -p android/app/src/main/res/values
@@ -356,7 +363,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
+      - name: Prepare Android SDK
+        run: |
+          SDKM=$(ls $ANDROID_HOME/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "sdkmanager=$SDKM"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-34" "build-tools;34.0.0" > /dev/null || true
 
       - uses: gradle/actions/setup-gradle@v4
         with:
@@ -366,12 +379,16 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets/web
           rsync -a --exclude='.git' --exclude='.github' --exclude='android' --exclude='*.zip' --exclude='*.rules' --exclude='sitemap.xml' --exclude='robots.txt' ./ android/app/src/main/assets/web/
+          ls android/app/src/main/assets/web | head -30
 
       - name: Build debug APK
         working-directory: android
-        run: gradle --no-daemon assembleDebug
+        run: gradle --no-daemon --stacktrace assembleDebug
+
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Mohomx-Admin.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Mohomx-Admin-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Mohomx-Admin-App
+          path: Mohomx-Admin.apk
