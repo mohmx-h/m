@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
-      - name: Workflow version check (v3)
-        run: echo "mohomx-apk-builder v3"
+      - name: Workflow version check (v4)
+        run: echo "mohomx-apk-builder v4"
 
       - uses: actions/checkout@v4
 
@@ -48,6 +48,8 @@ jobs:
           }
 
           dependencies {
+              // aligns all Kotlin stdlib versions (fixes the Duplicate class kotlin.* error)
+              implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')
               implementation 'androidx.appcompat:appcompat:1.7.0'
               implementation 'androidx.webkit:webkit:1.11.0'
           }
