@@ -1,0 +1,456 @@
+name: Mohomx APK Builder
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Workflow version check (v4)
+        run: echo "mohomx-apk-builder v4"
+
+      - uses: actions/checkout@v4
+
+      - name: Create the Android project
+        run: |
+          mkdir -p android/app
+          cat > android/app/build.gradle <<'EOF_FILE'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.mohomx.admin'
+              compileSdk 34
+
+              defaultConfig {
+                  applicationId "com.mohomx.admin"
+                  minSdk 24
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0"
+              }
+
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                  }
+              }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+          }
+
+          dependencies {
+              // aligns all Kotlin stdlib versions (fixes the Duplicate class kotlin.* error)
+              implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')
+              implementation 'androidx.appcompat:appcompat:1.7.0'
+              implementation 'androidx.webkit:webkit:1.11.0'
+          }
+          EOF_FILE
+          mkdir -p android/app/src/main
+          cat > android/app/src/main/AndroidManifest.xml <<'EOF_FILE'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <uses-permission android:name="android.permission.INTERNET" />
+
+              <application
+                  android:allowBackup="false"
+                  android:icon="@drawable/ic_launcher"
+                  android:label="@string/app_name"
+                  android:supportsRtl="true"
+                  android:theme="@style/AppTheme"
+                  android:usesCleartextTraffic="false">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:launchMode="singleTask"
+                      android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout|uiMode|density"
+                      android:windowSoftInputMode="adjustResize">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                      <meta-data
+                          android:name="android.app.shortcuts"
+                          android:resource="@xml/shortcuts" />
+                  </activity>
+
+              </application>
+          </manifest>
+          EOF_FILE
+          mkdir -p android/app/src/main/java/com/mohomx/admin
+          cat > android/app/src/main/java/com/mohomx/admin/MainActivity.java <<'EOF_FILE'
+          package com.mohomx.admin;
+
+          import android.annotation.SuppressLint;
+          import android.content.ActivityNotFoundException;
+          import android.content.Intent;
+          import java.nio.charset.StandardCharsets;
+          import java.io.OutputStream;
+          import java.io.FileOutputStream;
+          import java.io.File;
+          import android.widget.Toast;
+          import android.webkit.JavascriptInterface;
+          import android.provider.MediaStore;
+          import android.os.Environment;
+          import android.os.Build;
+          import android.content.ContentValues;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import android.webkit.JsResult;
+          import android.webkit.ValueCallback;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebResourceRequest;
+          import android.webkit.WebResourceResponse;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          import androidx.activity.OnBackPressedCallback;
+          import androidx.activity.result.ActivityResultLauncher;
+          import androidx.activity.result.contract.ActivityResultContracts;
+          import androidx.appcompat.app.AlertDialog;
+          import androidx.appcompat.app.AppCompatActivity;
+          import androidx.webkit.WebViewAssetLoader;
+
+          public class MainActivity extends AppCompatActivity {
+
+              /* false = files bundled inside the app (updated when a new APK is built) | true = opens the published site directly (always up to date) */
+              private static final boolean USE_LIVE_SITE = false;
+
+              private static final String LIVE_HOST = "mohmx-h.github.io";
+              private static final String LIVE_BASE = "https://mohmx-h.github.io/m/";
+              private static final String APP_HOST = "appassets.androidplatform.net";
+              private static final String APP_BASE = "https://" + APP_HOST + "/assets/web/";
+
+              private WebView web;
+              private ValueCallback<Uri[]> filePathCallback;
+              private ActivityResultLauncher<Intent> fileLauncher;
+
+              @SuppressLint("SetJavaScriptEnabled")
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  web = new WebView(this);
+                  setContentView(web);
+
+                  // image picker for file inputs in the panel
+                  fileLauncher = registerForActivityResult(
+                          new ActivityResultContracts.StartActivityForResult(),
+                          result -> {
+                              if (filePathCallback == null) return;
+                              Uri[] uris = WebChromeClient.FileChooserParams.parseResult(
+                                      result.getResultCode(), result.getData());
+                              filePathCallback.onReceiveValue(uris);
+                              filePathCallback = null;
+                          });
+
+                  final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
+                          .setDomain(APP_HOST)
+                          .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                          .build();
+
+                  WebSettings s = web.getSettings();
+                  s.setJavaScriptEnabled(true);
+                  s.setDomStorageEnabled(true);
+                  s.setDatabaseEnabled(true);
+                  s.setAllowFileAccess(false);
+                  s.setAllowContentAccess(true);
+                  s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+                  s.setSupportMultipleWindows(false);
+
+                  web.addJavascriptInterface(new DownloadBridge(), "AndroidBridge");
+
+                  web.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                          return loader.shouldInterceptRequest(request.getUrl());
+                      }
+
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          return handleUrl(request.getUrl());
+                      }
+                  });
+
+                  web.setWebChromeClient(new WebChromeClient() {
+                      @Override
+                      public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> callback,
+                                                       FileChooserParams params) {
+                          if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+                          filePathCallback = callback;
+                          try {
+                              fileLauncher.launch(params.createIntent());
+                          } catch (Exception e) {
+                              filePathCallback = null;
+                              return false;
+                          }
+                          return true;
+                      }
+
+                      // confirm() and alert() dialogs (delete confirmations) do not work in a WebView without these
+                      @Override
+                      public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
+                          if (isFinishing()) { result.cancel(); return true; }
+                          new AlertDialog.Builder(MainActivity.this)
+                                  .setMessage(message)
+                                  .setPositiveButton(R.string.btn_ok, (d, w) -> result.confirm())
+                                  .setNegativeButton(R.string.btn_cancel, (d, w) -> result.cancel())
+                                  .setOnCancelListener(d -> result.cancel())
+                                  .show();
+                          return true;
+                      }
+
+                      @Override
+                      public boolean onJsAlert(WebView view, String url, String message, final JsResult result) {
+                          if (isFinishing()) { result.confirm(); return true; }
+                          new AlertDialog.Builder(MainActivity.this)
+                                  .setMessage(message)
+                                  .setPositiveButton(R.string.btn_ok_alert, (d, w) -> result.confirm())
+                                  .setOnCancelListener(d -> result.confirm())
+                                  .show();
+                          return true;
+                      }
+                  });
+
+                  getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+                      @Override
+                      public void handleOnBackPressed() {
+                          if (web.canGoBack()) web.goBack(); else finish();
+                      }
+                  });
+
+                  if (savedInstanceState != null) {
+                      web.restoreState(savedInstanceState);
+                  } else {
+                      loadPage(getIntent());
+                  }
+              }
+
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  loadPage(intent);
+              }
+
+              private void loadPage(Intent intent) {
+                  String page = intent == null ? null : intent.getStringExtra("page");
+                  if (page == null || !page.matches("[A-Za-z0-9_\\-]+\\.html")) page = "admin.html";
+                  web.loadUrl((USE_LIVE_SITE ? LIVE_BASE : APP_BASE) + page);
+              }
+
+              private boolean handleUrl(Uri u) {
+                  String host = u.getHost() == null ? "" : u.getHost();
+                  if (host.equals(APP_HOST)) {
+                      String p = u.getPath() == null ? "" : u.getPath();
+                      if (p.startsWith("/assets/web/")) return false;          // page inside the app
+                      // links like ../index.html leave the app folder: open the published site in the browser
+                      String rest = p.startsWith("/assets/") ? p.substring("/assets/".length()) : "";
+                      openExternal(Uri.parse(LIVE_BASE + rest));
+                      return true;
+                  }
+                  if (USE_LIVE_SITE && host.equals(LIVE_HOST)) return false;
+                  openExternal(u);
+                  return true;
+              }
+
+              private void openExternal(Uri uri) {
+                  try {
+                      startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                  } catch (ActivityNotFoundException ignored) {
+                  }
+              }
+
+              /* Saves backup files (JSON) coming from the dashboard into the Downloads folder.
+                 WebView ignores blob/anchor downloads, so the dashboard calls AndroidBridge.saveFile(name, text). */
+              private class DownloadBridge {
+                  @JavascriptInterface
+                  public boolean saveFile(String name, String text) {
+                      try {
+                          if (name == null || text == null || text.length() > 60000000) return false;
+                          String safe = name.replaceAll("[^A-Za-z0-9._-]", "_");
+                          if (!safe.endsWith(".json")) safe = safe + ".json";
+                          byte[] data = text.getBytes(StandardCharsets.UTF_8);
+                          final String where;
+                          if (Build.VERSION.SDK_INT >= 29) {
+                              ContentValues v = new ContentValues();
+                              v.put(MediaStore.Downloads.DISPLAY_NAME, safe);
+                              v.put(MediaStore.Downloads.MIME_TYPE, "application/json");
+                              v.put(MediaStore.Downloads.IS_PENDING, 1);
+                              Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
+                              if (uri == null) return false;
+                              try (OutputStream o = getContentResolver().openOutputStream(uri)) {
+                                  o.write(data);
+                              }
+                              v.clear();
+                              v.put(MediaStore.Downloads.IS_PENDING, 0);
+                              getContentResolver().update(uri, v, null, null);
+                              where = "\u0645\u062c\u0644\u062f \u0627\u0644\u062a\u0646\u0632\u064a\u0644\u0627\u062a (Downloads)";
+                          } else {
+                              File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                              if (dir == null) return false;
+                              File f = new File(dir, safe);
+                              try (FileOutputStream o = new FileOutputStream(f)) {
+                                  o.write(data);
+                              }
+                              where = f.getAbsolutePath();
+                          }
+                          final String msg = "\u062a\u0645 \u062d\u0641\u0638 \u0627\u0644\u0645\u0644\u0641: " + safe + "\n" + where;
+                          runOnUiThread(new Runnable() {
+                              @Override
+                              public void run() {
+                                  Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+                              }
+                          });
+                          return true;
+                      } catch (Exception e) {
+                          return false;
+                      }
+                  }
+              }
+
+              @Override
+              protected void onSaveInstanceState(Bundle outState) {
+                  super.onSaveInstanceState(outState);
+                  web.saveState(outState);
+              }
+
+              @Override
+              protected void onDestroy() {
+                  if (web != null) web.destroy();
+                  super.onDestroy();
+              }
+          }
+          EOF_FILE
+          mkdir -p android/app/src/main/res/drawable
+          cat > android/app/src/main/res/drawable/ic_launcher.xml <<'EOF_FILE'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path
+                  android:fillColor="#FF6B2B"
+                  android:pathData="M22,0h64a22,22 0 0 1 22,22v64a22,22 0 0 1 -22,22h-64a22,22 0 0 1 -22,-22v-64a22,22 0 0 1 22,-22z" />
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M28,80V30h9l17,27l17,-27h9V80h-9V47L54,74L37,47V80z" />
+          </vector>
+          EOF_FILE
+          mkdir -p android/app/src/main/res/values
+          cat > android/app/src/main/res/values/strings.xml <<'EOF_FILE'
+          <resources>
+              <string name="app_name">لوحة التحكم</string>
+              <string name="sc_log">سجل النشاط</string>
+              <string name="sc_log_long">فتح سجل النشاط</string>
+              <string name="btn_ok">موافق</string>
+              <string name="btn_cancel">إلغاء</string>
+              <string name="btn_ok_alert">حسنًا</string>
+          </resources>
+          EOF_FILE
+          mkdir -p android/app/src/main/res/values
+          cat > android/app/src/main/res/values/styles.xml <<'EOF_FILE'
+          <resources>
+              <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+                  <item name="android:statusBarColor">#0B0B10</item>
+                  <item name="android:navigationBarColor">#0B0B10</item>
+                  <item name="android:windowBackground">#0B0B10</item>
+              </style>
+          </resources>
+          EOF_FILE
+          mkdir -p android/app/src/main/res/xml
+          cat > android/app/src/main/res/xml/shortcuts.xml <<'EOF_FILE'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+              <shortcut
+                  android:shortcutId="activity_log"
+                  android:enabled="true"
+                  android:shortcutShortLabel="@string/sc_log"
+                  android:shortcutLongLabel="@string/sc_log_long">
+                  <intent
+                      android:action="android.intent.action.VIEW"
+                      android:targetPackage="com.mohomx.admin"
+                      android:targetClass="com.mohomx.admin.MainActivity">
+                      <extra android:name="page" android:value="activity-log.html" />
+                  </intent>
+              </shortcut>
+          </shortcuts>
+          EOF_FILE
+          mkdir -p android
+          cat > android/build.gradle <<'EOF_FILE'
+          plugins {
+              id 'com.android.application' version '8.5.2' apply false
+          }
+          EOF_FILE
+          mkdir -p android
+          cat > android/gradle.properties <<'EOF_FILE'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          EOF_FILE
+          mkdir -p android
+          cat > android/settings.gradle <<'EOF_FILE'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "MohomxAdmin"
+          include(":app")
+          EOF_FILE
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Prepare Android SDK
+        run: |
+          SDKM=$(ls $ANDROID_HOME/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "sdkmanager=$SDKM"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-34" "build-tools;34.0.0" > /dev/null || true
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Copy the site files into the app
+        run: |
+          mkdir -p android/app/src/main/assets/web
+          rsync -a --exclude='.git' --exclude='.github' --exclude='android' --exclude='*.zip' --exclude='*.rules' --exclude='sitemap.xml' --exclude='robots.txt' ./ android/app/src/main/assets/web/
+          ls android/app/src/main/assets/web | head -30
+
+      - name: Build debug APK
+        working-directory: android
+        run: gradle --no-daemon --stacktrace assembleDebug
+
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Mohomx-Admin.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mohomx-Admin-App
+          path: Mohomx-Admin.apk
